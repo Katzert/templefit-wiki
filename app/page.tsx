@@ -250,7 +250,7 @@ export default function TempleWikiApp() {
     setLlmExtracting(true);
     setTimeout(() => {
       setLlmExtracting(false);
-      alert('🤖 LLM Wiki Synthesis Completed:\nSe extrajeron las ideas maestras de Paulo sobre Visión de Marca y Retención 2027 y se incorporaron a la base de conocimiento del negocio.');
+      alert('✅ Síntesis completada: Las notas seleccionadas se integraron a la base de conocimiento del negocio.');
     }, 2000);
   };
 
