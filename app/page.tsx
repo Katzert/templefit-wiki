@@ -290,7 +290,7 @@ export default function TempleWikiApp() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold bg-temple-gold/10 px-2 py-0.5 rounded border border-temple-gold/30">
-                  TempleFit Wiki Standalone
+                  Base de Conocimiento
                 </span>
               </div>
               <h1 className="text-xl font-serif font-black tracking-wider uppercase text-white">
