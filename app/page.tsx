@@ -129,6 +129,7 @@ export default function TempleWikiApp() {
 
   const [activeNoteId, setActiveNoteId] = useState<string>('note-cuerpo');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
 
   // Keyboard shortcut Ctrl+K / Cmd+K for accessibility search focus
