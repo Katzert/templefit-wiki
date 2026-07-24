@@ -4,6 +4,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  basePath: '/templefit-wiki',
+  assetPrefix: '/templefit-wiki/',
   trailingSlash: true,
 };
 
