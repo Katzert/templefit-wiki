@@ -5,7 +5,6 @@ const nextConfig = {
     unoptimized: true,
   },
   basePath: '/templefit-wiki',
-  assetPrefix: '/templefit-wiki/',
   trailingSlash: true,
 };
 

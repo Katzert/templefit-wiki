@@ -129,7 +129,19 @@ export default function TempleWikiApp() {
 
   const [activeNoteId, setActiveNoteId] = useState<string>('note-cuerpo');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+
+  // Keyboard shortcut Ctrl+K / Cmd+K for accessibility search focus
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('wiki-search-input')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [viewMode, setViewMode] = useState<'editor' | 'graph'>('editor');
   const [isEditing, setIsEditing] = useState(false);
   const [editedTitle, setEditedTitle] = useState('');
@@ -474,10 +486,12 @@ export default function TempleWikiApp() {
                     <div className="relative">
                       <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                       <input
+                        id="wiki-search-input"
+                        aria-label="Buscar nota o etiqueta (Ctrl + K)"
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Buscar nota o #etiqueta..."
+                        placeholder="Buscar nota o #etiqueta (Ctrl + K)..."
                         className="w-full bg-black/50 border border-white/10 rounded-xl py-2.5 pl-9 pr-4 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-temple-gold"
                       />
                     </div>
