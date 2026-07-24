@@ -255,7 +255,7 @@ export default function TempleWikiApp() {
   };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const NOTES_PER_PAGE = 3;
+  const NOTES_PER_PAGE = 10;
 
   // Collect all unique tags
   const allTags = Array.from(new Set(vaultNotes.flatMap(n => n.tags)));
