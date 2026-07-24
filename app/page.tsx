@@ -254,6 +254,9 @@ export default function TempleWikiApp() {
     }, 2000);
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const NOTES_PER_PAGE = 3;
+
   // Collect all unique tags
   const allTags = Array.from(new Set(vaultNotes.flatMap(n => n.tags)));
 
@@ -262,6 +265,9 @@ export default function TempleWikiApp() {
     const matchesTag = selectedTag ? n.tags.includes(selectedTag) : true;
     return matchesSearch && matchesTag;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredNotes.length / NOTES_PER_PAGE));
+  const paginatedNotes = filteredNotes.slice((currentPage - 1) * NOTES_PER_PAGE, currentPage * NOTES_PER_PAGE);
 
   return (
     <div className="min-h-screen bg-[#05070C] text-white flex flex-col font-sans">
@@ -523,9 +529,9 @@ export default function TempleWikiApp() {
                       </div>
                     </div>
 
-                    {/* Notes List */}
-                    <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-                      {filteredNotes.map((n) => {
+                    {/* Notes List with Forum Pagination */}
+                    <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
+                      {paginatedNotes.map((n) => {
                         const isActive = n.id === activeNote.id;
                         return (
                           <div
@@ -552,6 +558,30 @@ export default function TempleWikiApp() {
                         );
                       })}
                     </div>
+
+                    {/* Forum Style Pagination Controls */}
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-3 border-t border-white/10 text-xs">
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                          Pág {currentPage} de {totalPages}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                            <button
+                              key={p}
+                              onClick={() => setCurrentPage(p)}
+                              className={`w-7 h-7 rounded-lg text-xs font-extrabold transition ${
+                                currentPage === p
+                                  ? 'bg-temple-gold text-black shadow-sm'
+                                  : 'bg-black/40 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                   </CardContent>
                 </Card>
