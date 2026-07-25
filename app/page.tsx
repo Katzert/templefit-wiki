@@ -20,134 +20,101 @@ interface WikiNote {
 }
 
 const DEFAULT_NOTES: WikiNote[] = [
-  // Bóveda 1: Conocimiento Negocio TempleFit
   {
-    id: 'note-sops',
-    title: '📋 Procedimientos Operativos Estándar (12 SOPs)',
+    id: 'note-sops-1',
+    title: '📘 1. Modelo Bicéfalo y Espacios',
     vault: 'business',
-    tags: ['sops', 'operaciones', 'seguridad', 'eventos'],
-    content: `# 📋 Procedimientos Operativos Estándar (12 SOPs)
-
-Base de conocimiento operativa para entrenadores y administradores de **TempleFit**.
-
-## 1. Seguridad Digital & Contratación
-- **SOP 1:** Protocolo de contratación y seguridad digital.
-- **SOP 2:** SOP de ventas y atención al cliente.
-- **SOP 3:** SOP de entrenamiento en [[Pilar_Cuerpo]] y [[Pilar_Mente]].
-- **SOP 4:** Protocolo de logística en espacios públicos.
-
-## 2. Eventos & Audiencias
-- **SOP 5:** SOP de fidelización y seguimiento de atletas.
-- **SOP 6:** SOP de producción de eventos masivos (CristoFit Camp).
-- **SOP 7:** SOP de gestión de audiencias masivas.
-- **SOP 8:** SOP de comunicación y RRPP.
-
-## 3. Expansión & Auditoría
-- **SOP 9:** SOP de apertura de nuevas sedes.
-- **SOP 10:** SOP de gestión de alianzas comerciales.
-- **SOP 11:** SOP de auditoría y cierre de ciclo.
-- **SOP 12:** SOP de planificación anual y expansión.
-
-#sops #operaciones #seguridad #eventos`,
+    tags: ['sops', 'arquitectura', 'modelo'],
+    content: `# 📘 1. Modelo Bicéfalo y Espacios
+El gimnasio opera con un modelo asociado donde nosotros manejamos 3 Niveles Operativos:
+- Fase 1: Iniciación
+- Fase 2: Desarrollo
+- Fase 3: Perfeccionamiento
+- Repartición de gimnasio: 30% del margen neto.`,
     attachments: [],
-    updatedAt: '25 de Julio, 2026'
+    updatedAt: new Date().toLocaleDateString('es-ES')
   },
   {
-    id: 'note-cuerpo',
-    title: '🏋️‍♂️ Pilar Cuerpo: Protocolo Nutrición & Fuerza',
+    id: 'note-sops-2',
+    title: '🎯 2. El Modelo Hub (Las 4 Unidades)',
     vault: 'business',
-    tags: ['cuerpo', 'nutricion', 'fuerza', 'salud'],
-    content: `# 🏋️‍♂️ Pilar Cuerpo: Protocolo Nutrición & Fuerza
-
-Nota de referencia oficial para el equipo de entrenadores de **TempleFit**.
-
-## Standard Operating Procedures (SOP)
-- **Agua:** Mínimo 2.5L a 3.0L de agua purificada diarios.
-- **Protocolo Matutino:** Consumir 500ml de agua al despertar antes de café o alimentos.
-- **Nutrición Bio-optimizada:** 0 azúcares refinados. Priorizar 1.8g proteína/kg.
-- **Entrenamiento:** Combinación de fuerza hipertrofia con calistenia y acondicionamiento en [[Sábados_CristoFit]].
-
-#nutricion #fuerza #cuerpo #salud`,
-    attachments: [
-      { name: 'Guia_Nutricion_Keto_Bio.pdf', url: '#', type: 'pdf' }
-    ],
-    updatedAt: '23 de Julio, 2026'
-  },
-  {
-    id: 'note-mente',
-    title: '🧠 Pilar Mente: Rutina Matutina & Neuro-Ventas',
-    vault: 'business',
-    tags: ['mente', 'habitos', 'ventas', 'liderazgo'],
-    content: `# 🧠 Pilar Mente: Rutina Matutina & Neuro-Ventas
-
-Directrices cognitivas para el acondicionamiento mental de los atletas:
-
-1. **Regla de Oro Matutina:** 0 redes sociales durante los primeros 60 minutos del día.
-2. **Lectura Diaria:** 15 minutos de desarrollo personal antes de iniciar el bloque de trabajo.
-3. **Neuro-Ventas Éticas:** Escuchar la necesidad del cliente y conectar con sus valores antes de ofrecer el [[Reto_21_Dias]].
-
-#mente #habitos #ventas #liderazgo`,
+    tags: ['sops', 'hub', 'unidades'],
+    content: `# 🎯 2. El Modelo Hub
+1. Centro de Entrenamiento
+2. Barra Nutricional Integrada
+3. Apparel (Marca de Ropa)
+4. Medicina Preventiva
+Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
     attachments: [],
-    updatedAt: '23 de Julio, 2026'
+    updatedAt: new Date().toLocaleDateString('es-ES')
   },
   {
-    id: 'note-espiritu',
-    title: '❤️ Pilar Espíritu: Fe, Gratitud & CristoFit Camp',
+    id: 'note-sops-3',
+    title: '⏱️ 3. Ritmos Semanales y Festivales',
     vault: 'business',
-    tags: ['espiritu', 'fe', 'comunidad', 'cristofit'],
-    content: `# ❤️ Pilar Espíritu: Fe, Gratitud & CristoFit Camp
-
-Valores inquebrantables del atleta íntegro:
-
-- **Oración Matutina:** 10 a 15 minutos de gratitud y conexión espiritual.
-- **Sábados CristoFit Camp:** Entrenamiento grupal al aire libre en Santa Cruz, Bolivia.
-- **Regla de la Excelencia:** "Todo lo que hagan, háganlo de corazón, como para el Señor" (Colosenses 3:23).
-
-#espiritu #fe #comunidad #cristofit`,
+    tags: ['sops', 'ritmos', 'sabados'],
+    content: `# ⏱️ 3. Ritmos Semanales y Festivales
+- **Sábados CristoFit Camp:** Bloques de Fuerza, Comunidad, Catering, Técnica, Cardio, Show Fit.
+- **Trimestral:** Festivales Corona de Victoria y Vida.
+- **Neuro-Entrenamiento de Impacto en Ventas:** Programa formativo de 630 horas.`,
     attachments: [],
-    updatedAt: '23 de Julio, 2026'
+    updatedAt: new Date().toLocaleDateString('es-ES')
   },
-
-  // Bóveda 2: Bóveda Privada Fundadores (Paulo & Tú)
   {
-    id: 'note-paulo-estrategia-2027',
-    title: '🔐 Estrategia Franquicias 2027 (Paulo & Socio)',
+    id: 'note-sops-4',
+    title: '🧲 4. Red de Embudos de Venta',
+    vault: 'business',
+    tags: ['sops', 'ventas', 'embudos'],
+    content: `# 🧲 4. Red de Embudos de Venta
+- **F1 Conversion:** 5 emails, 7 días. Lead Magnet: 1 semana gratis + 20% Dcto Snack Bar.
+- **F2 Recovery:** Recuperación de desertores. 24h Gym, 48h Catering, 72h Med Prev.
+- **F3:** 60% conversión onboarding de Gym a Snack Bar.`,
+    attachments: [],
+    updatedAt: new Date().toLocaleDateString('es-ES')
+  },
+  {
+    id: 'note-sops-5',
+    title: '📊 5. Bases de Datos y Métricas',
+    vault: 'business',
+    tags: ['sops', 'metricas', 'control'],
+    content: `# 📊 5. Bases de Datos y Métricas de Control
+- **Checklist 6 Días Operativos**
+- **Corte Ejecutivo:** Lunes 8:00 AM (Ingresos, Vidas Impactadas, Margen Neto).
+- **Regla 3-3-3:** Alerta de estancamiento.
+- **NPS:** Corregir operaciones si baja de 7.`,
+    attachments: [],
+    updatedAt: new Date().toLocaleDateString('es-ES')
+  },
+  {
+    id: 'note-sops-6',
+    title: '🛡️ 6. Modelo de los 12 Discípulos',
+    vault: 'business',
+    tags: ['sops', 'escuadrones', 'liderazgo'],
+    content: `# 🛡️ 6. Modelo de los 12 Discípulos (Escuadrones)
+- **Brigadas Independientes:** 25 grupos.
+- **Límite:** 12 atletas por escuadrón para máximo control de comunidad.
+- **Meta Anual:** 300 atletas certificados en el primer año.`,
+    attachments: [],
+    updatedAt: new Date().toLocaleDateString('es-ES')
+  },
+  {
+    id: 'note-sops-7',
+    title: '💰 7. Marco Corporativo (Regla 50/50)',
     vault: 'founders',
-    tags: ['paulo_ideas', 'estrategia', 'franquicias', 'privado'],
-    content: `# 🔐 Estrategia Franquicias 2027 (Notas Borrador Paulo & Socio)
-
-**CONFIDENCIAL - BÓVEDA PRIVADA DE FUNDADORES**
-
-Ideas para discusión ejecutiva entre Paulo y Socio:
-- Modelo de expansión de licencias en gimnasios de Santa Cruz y Cochabamba.
-- Paquete de royalty del 8% sobre inscripciones del Reto 21 Días.
-- Incorporación de la línea de suplementos limpios marca propia TempleFit.
-
-*Nota para el LLM:* Extraer y sintetizar solo el modelo de retención para la documentación pública del negocio.
-
-#paulo_ideas #estrategia #franquicias #privado`,
-    attachments: [
-      { name: 'Modelo_Financiero_Proyeccion.xlsx', url: '#', type: 'excel' }
-    ],
-    updatedAt: '23 de Julio, 2026'
-  },
-  {
-    id: 'note-paulo-vision-marca',
-    title: '🔐 Visión de Marca & Manifiesto del Escuadrón',
-    vault: 'founders',
-    tags: ['paulo_ideas', 'manifiesto', 'vision', 'privado'],
-    content: `# 🔐 Visión de Marca & Manifiesto del Escuadrón
-
-**IDEAS MAESTRAS DE PAULO & SOCIO**
-
-Borrador de valores clave para transmitir en las mentorías de liderazgo:
-- No buscamos clientes, buscamos atletas valientes que transformen su familia.
-- La disciplina física es el reflejo visible del carácter espiritual.
-- Medir la tasa de retención no por ingresos sino por vidas salvadas del sedentarismo.
-
-#paulo_ideas #manifiesto #vision #privado`,
+    tags: ['estrategia', 'finanzas', 'privado'],
+    content: `# 💰 7. Marco Corporativo (Distribución de Utilidades)
+**CONFIDENCIAL**
+- 50% de las utilidades netas se REINVIERTEN obligatoriamente en el Hub.
+- 50% de las utilidades se distribuyen:
+  - 25% Fundador
+  - 10% Regalías (Royalties)
+  - 10% Manager del Gym
+  - 10% Chef / Nutricionista
+  - 10% Pool de Instructores
+  - 5% Marketing / Closers
+  - 5% Fondo Bonus (Equipo)`,
     attachments: [],
-    updatedAt: '23 de Julio, 2026'
+    updatedAt: new Date().toLocaleDateString('es-ES')
   }
 ];
 
@@ -158,7 +125,7 @@ export default function TempleWikiApp() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState(false);
 
-  const [activeNoteId, setActiveNoteId] = useState<string>('note-cuerpo');
+  const [activeNoteId, setActiveNoteId] = useState<string>('note-sops-1');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
