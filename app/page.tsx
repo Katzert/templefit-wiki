@@ -22,6 +22,37 @@ interface WikiNote {
 const DEFAULT_NOTES: WikiNote[] = [
   // Bóveda 1: Conocimiento Negocio TempleFit
   {
+    id: 'note-sops',
+    title: '📋 Procedimientos Operativos Estándar (12 SOPs)',
+    vault: 'business',
+    tags: ['sops', 'operaciones', 'seguridad', 'eventos'],
+    content: `# 📋 Procedimientos Operativos Estándar (12 SOPs)
+
+Base de conocimiento operativa para entrenadores y administradores de **TempleFit**.
+
+## 1. Seguridad Digital & Contratación
+- **SOP 1:** Protocolo de contratación y seguridad digital.
+- **SOP 2:** SOP de ventas y atención al cliente.
+- **SOP 3:** SOP de entrenamiento en [[Pilar_Cuerpo]] y [[Pilar_Mente]].
+- **SOP 4:** Protocolo de logística en espacios públicos.
+
+## 2. Eventos & Audiencias
+- **SOP 5:** SOP de fidelización y seguimiento de atletas.
+- **SOP 6:** SOP de producción de eventos masivos (CristoFit Camp).
+- **SOP 7:** SOP de gestión de audiencias masivas.
+- **SOP 8:** SOP de comunicación y RRPP.
+
+## 3. Expansión & Auditoría
+- **SOP 9:** SOP de apertura de nuevas sedes.
+- **SOP 10:** SOP de gestión de alianzas comerciales.
+- **SOP 11:** SOP de auditoría y cierre de ciclo.
+- **SOP 12:** SOP de planificación anual y expansión.
+
+#sops #operaciones #seguridad #eventos`,
+    attachments: [],
+    updatedAt: '25 de Julio, 2026'
+  },
+  {
     id: 'note-cuerpo',
     title: '🏋️‍♂️ Pilar Cuerpo: Protocolo Nutrición & Fuerza',
     vault: 'business',
