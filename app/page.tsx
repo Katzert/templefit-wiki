@@ -281,44 +281,44 @@ export default function TempleWikiApp() {
       )}
 
       {/* Top Header */}
-      <header className="border-b border-white/10 bg-[#0B0F19]/90 backdrop-blur-md sticky top-0 z-40 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-temple-gold/20 to-amber-500/10 border border-temple-gold/40 flex items-center justify-center">
-              <BookOpen className="text-temple-gold" size={20} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold bg-temple-gold/10 px-2 py-0.5 rounded border border-temple-gold/30">
+      <header className="border-b border-white/10 bg-[#0B0F19]/95 backdrop-blur-md sticky top-0 z-40 px-3 py-2.5 sm:px-6 sm:py-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center justify-between sm:justify-start w-full sm:w-auto gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-temple-gold/20 to-amber-500/10 border border-temple-gold/40 flex items-center justify-center">
+                <BookOpen className="text-temple-gold w-4 h-4 sm:w-5 sm:h-5" />
+              </div>
+              <div>
+                <span className="text-[8px] sm:text-[9px] font-extrabold uppercase tracking-[0.2em] text-temple-gold bg-temple-gold/10 px-1.5 py-0.5 rounded border border-temple-gold/30">
                   Base de Conocimiento
                 </span>
+                <h1 className="text-base sm:text-xl font-serif font-black tracking-wider uppercase text-white leading-none mt-0.5">
+                  TEMPLEFIT<span className="text-temple-gold italic">-WIKI</span>
+                </h1>
               </div>
-              <h1 className="text-xl font-serif font-black tracking-wider uppercase text-white">
-                TEMPLEFIT<span className="text-temple-gold italic">-WIKI</span>
-              </h1>
             </div>
           </div>
 
           {/* Vault Selector Tabs */}
-          <div className="flex items-center gap-2 bg-black/60 p-1.5 rounded-2xl border border-white/10">
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-black/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-white/10 w-full sm:w-auto overflow-x-auto">
             <button
               onClick={() => handleSwitchVault('business')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 ${
+              className={`flex-1 sm:flex-none px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
                 activeVault === 'business' ? 'bg-temple-gold text-black shadow-md' : 'text-gray-400 hover:text-white'
               }`}
             >
-              <FileText size={14} />
+              <FileText size={13} />
               <span>1. Bóveda Negocio</span>
             </button>
 
             <button
               onClick={() => handleSwitchVault('founders')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition flex items-center gap-2 ${
+              className={`flex-1 sm:flex-none px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
                 activeVault === 'founders' ? 'bg-amber-500 text-black shadow-md' : 'text-gray-400 hover:text-white'
               }`}
             >
-              {isUnlocked ? <Unlock size={14} /> : <Lock size={14} />}
-              <span>2. Bóveda Privada (Paulo & Socio)</span>
+              {isUnlocked ? <Unlock size={13} /> : <Lock size={13} />}
+              <span>2. Bóveda Privada</span>
             </button>
           </div>
         </div>
@@ -359,77 +359,77 @@ export default function TempleWikiApp() {
         </div>
       ) : (
         /* ACTIVE OBSIDIAN WIKI INTERFACE */
-        <div className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+        <div className="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
           
           {/* Sub Header Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#0B0F19]/60 p-4 rounded-2xl border border-white/10">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                {activeVault === 'business' ? '🏛️ Bóveda Conocimiento Negocio' : '🔐 Bóveda Privada Fundadores (Paulo & Socio)'}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-[#0B0F19]/80 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/10">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] sm:text-xs font-bold text-gray-300 uppercase tracking-wider truncate">
+                {activeVault === 'business' ? '🏛️ Bóveda Negocio' : '🔐 Bóveda Privada'}
               </span>
               {activeVault === 'founders' && (
                 <button
                   onClick={handleLLMExtract}
                   disabled={llmExtracting}
-                  className="px-3 py-1 bg-gradient-to-r from-amber-500 to-temple-gold text-black text-[10px] font-extrabold uppercase tracking-wider rounded-lg flex items-center gap-1.5 hover:scale-105 transition shadow-sm"
+                  className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-temple-gold text-black text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider rounded-lg flex items-center gap-1 hover:scale-105 transition shadow-sm whitespace-nowrap"
                 >
                   <Cpu size={12} />
-                  <span>{llmExtracting ? 'Sintetizando...' : 'Extraer Conocimiento con LLM'}</span>
+                  <span>{llmExtracting ? 'Sintetizando...' : 'Extraer con LLM'}</span>
                 </button>
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between sm:justify-end gap-2 w-full md:w-auto">
               {/* View Switcher */}
-              <div className="flex items-center bg-black/50 border border-white/10 rounded-xl p-1">
+              <div className="flex items-center bg-black/60 border border-white/10 rounded-xl p-1 flex-1 sm:flex-none">
                 <button
                   onClick={() => setViewMode('editor')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 ${
+                  className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1 ${
                     viewMode === 'editor' ? 'bg-temple-gold text-black shadow-sm' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Eye size={14} /> Editor & Notas
+                  <Eye size={13} /> <span>Editor & Notas</span>
                 </button>
                 <button
                   onClick={() => setViewMode('graph')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 ${
+                  className={`flex-1 sm:flex-none px-2.5 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1 ${
                     viewMode === 'graph' ? 'bg-temple-gold text-black shadow-sm' : 'text-gray-400 hover:text-white'
                   }`}
                 >
-                  <Network size={14} /> Grafo Obsidian 🕸️
+                  <Network size={13} /> <span>Grafo 🕸️</span>
                 </button>
               </div>
 
               <button
                 onClick={handleCreateNote}
-                className="px-4 py-2 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-amber-400 transition flex items-center gap-1.5 shadow-md"
+                className="px-3 py-2 bg-temple-gold text-black font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-xl hover:bg-amber-400 transition flex items-center gap-1 shadow-md whitespace-nowrap"
               >
-                <Plus size={16} /> Nueva Nota .md
+                <Plus size={14} /> <span>+ Nueva Nota</span>
               </button>
             </div>
           </div>
 
           {/* VIEW MODE 1: OBSIDIAN GRAPH VIEW 🕸️ */}
           {viewMode === 'graph' ? (
-            <Card className="bg-[#0B0F19]/95 border-temple-gold/30 min-h-[600px] relative overflow-hidden">
-              <CardContent className="!p-8">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+            <Card className="bg-[#0B0F19]/95 border-temple-gold/30 min-h-0 sm:min-h-[600px] relative overflow-hidden">
+              <CardContent className="!p-4 sm:!p-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
-                    <div className="p-3 bg-temple-gold/10 border border-temple-gold/30 rounded-2xl text-temple-gold">
-                      <Network size={22} />
+                    <div className="p-2.5 sm:p-3 bg-temple-gold/10 border border-temple-gold/30 rounded-xl sm:rounded-2xl text-temple-gold">
+                      <Network size={20} />
                     </div>
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-[0.25em] text-temple-gold">Red de Notas Descentralizadas</span>
-                      <h3 className="text-xl font-serif font-black uppercase text-white">Obsidian Graph View (Bóveda {activeVault === 'business' ? 'Negocio' : 'Fundadores'})</h3>
+                      <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold block">Red de Notas Descentralizadas</span>
+                      <h3 className="text-base sm:text-xl font-serif font-black uppercase text-white">Obsidian Graph View ({activeVault === 'business' ? 'Bóveda Negocio' : 'Bóveda Privada'})</h3>
                     </div>
                   </div>
-                  <span className="text-xs text-gray-400 font-bold uppercase tracking-widest bg-white/5 px-3 py-1.5 rounded-full border border-white/10">
+                  <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
                     {filteredNotes.length} Nodos de Conocimiento
                   </span>
                 </div>
 
                 {/* Graph Canvas */}
-                <div className="relative w-full h-[500px] bg-black/60 rounded-3xl border border-white/10 p-6 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-[320px] sm:h-[500px] bg-black/60 rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:16px_16px]" />
 
                   <svg className="absolute inset-0 w-full h-full pointer-events-none">
