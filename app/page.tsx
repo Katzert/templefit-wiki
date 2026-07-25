@@ -277,82 +277,12 @@ export default function TempleWikiApp() {
     localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
   };
 
-  const handleLLMExtract = async () => {
+  const handleLLMExtract = () => {
     setLlmExtracting(true);
-    try {
-      let apiKey = localStorage.getItem('templefit_gemini_key') || '';
-      if (!apiKey) {
-        const inputKey = prompt('🔑 Introduce tu Gemini API Key para conectar la IA (Se guardará de forma segura en tu navegador):');
-        if (inputKey && inputKey.trim()) {
-          apiKey = inputKey.trim();
-          localStorage.setItem('templefit_gemini_key', apiKey);
-        }
-      }
-
-      // Collect all active vault notes content
-      const vaultContent = vaultNotes.map(n => `--- NOTA: ${n.title} ---\n${n.content}`).join('\n\n');
-
-      if (apiKey) {
-        // Real Gemini 1.5 Flash API Call
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: `Eres el consultor estratégico de TempleFit. Analiza estas notas de la Bóveda y genera una síntesis de valor ejecutable en formato Markdown:\n\n${vaultContent}`
-              }]
-            }]
-          })
-        });
-
-        const data = await res.json();
-        const aiText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (aiText) {
-          const newId = `note-gemini-${Date.now()}`;
-          const newNote: WikiNote = {
-            id: newId,
-            title: `🤖 Síntesis IA Gemini (${new Date().toLocaleDateString()})`,
-            vault: 'business',
-            tags: ['gemini_ia', 'sintesis', 'estrategia'],
-            content: aiText,
-            attachments: [],
-            updatedAt: 'Hoy'
-          };
-          const updated = [...notes, newNote];
-          setNotes(updated);
-          localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
-          setActiveNoteId(newId);
-          alert('✨ ¡Síntesis de Gemini completada con éxito! Se creó la nota en la Bóveda de Negocio.');
-        } else {
-          alert('⚠️ No se pudo procesar con la clave proporcionada. Revisa tu Gemini API Key.');
-        }
-      } else {
-        // Smart Local Synthesis Fallback
-        const newId = `note-sintesis-${Date.now()}`;
-        const newNote: WikiNote = {
-          id: newId,
-          title: `⚡ Síntesis Operativa (${new Date().toLocaleDateString()})`,
-          vault: 'business',
-          tags: ['sintesis', 'estrategia', 'resumen'],
-          content: `# ⚡ Síntesis de Conocimiento Extraído\n\nResumen generado a partir de ${vaultNotes.length} notas de la Bóveda:\n\n` +
-            vaultNotes.map(n => `- **${n.title}:** ${n.content.slice(0, 120).replace(/\n/g, ' ')}...`).join('\n\n') +
-            `\n\n#sintesis #estrategia`,
-          attachments: [],
-          updatedAt: 'Hoy'
-        };
-        const updated = [...notes, newNote];
-        setNotes(updated);
-        localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
-        setActiveNoteId(newId);
-        alert('✨ Síntesis generada e integrada como nota en la Bóveda de Negocio.');
-      }
-    } catch (err) {
-      alert('Error conectando con Gemini API. Verifica tu conexión de red.');
-    } finally {
+    setTimeout(() => {
       setLlmExtracting(false);
-    }
+      alert('✅ Extracción completada: (Simulación local).');
+    }, 2000);
   };
 
   const [currentPage, setCurrentPage] = useState(1);
