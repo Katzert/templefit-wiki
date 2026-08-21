@@ -311,12 +311,12 @@ export default function TempleWikiApp() {
 
             <button
               onClick={() => handleSwitchVault('founders')}
-              className={`flex-1 sm:flex-none px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-1.5 whitespace-nowrap ${
-                activeVault === 'founders' ? 'bg-amber-500 text-black shadow-md' : 'text-gray-400 hover:text-white'
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold uppercase tracking-wider transition ${
+                activeVault === 'founders' ? 'bg-temple-gold text-black shadow-md' : 'text-gray-400 hover:text-white'
               }`}
             >
               {isUnlocked ? <Unlock size={13} /> : <Lock size={13} />}
-              <span>2. Bóveda Privada</span>
+              <span className="hidden sm:inline">Bóveda</span> Privada
             </button>
           </div>
         </div>
@@ -325,30 +325,32 @@ export default function TempleWikiApp() {
       {/* Main Content Area */}
       {activeVault === 'founders' && !isUnlocked ? (
         /* LOCK SCREEN FOR PRIVATE FOUNDERS VAULT */
-        <div className="flex-1 flex items-center justify-center p-6">
-          <Card className="max-w-md w-full bg-[#0B0F19] border-amber-500/30 p-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full bg-[#0B0F19] border-temple-gold/30 p-8 text-center space-y-6 shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-temple-gold/10 border border-temple-gold/30 flex items-center justify-center mx-auto text-temple-gold">
               <Lock size={32} />
             </div>
             <div>
-              <h3 className="text-2xl font-serif font-black uppercase text-white">Bóveda Privada de Fundadores</h3>
+              <h2 className="text-xl font-serif font-black text-white uppercase tracking-wider">Bóveda de Fundadores</h2>
               <p className="text-xs text-gray-400 mt-2 leading-relaxed">
-                Área confidencial exclusiva para Paulo y Socio. Introduce el PIN de seguridad para acceder a los borradores y notas maestras.
+                Ingresa el PIN de seguridad (4 dígitos) para acceder a los manuales confidenciales, balances 50/50 y arquitectura secreta.
               </p>
             </div>
 
             <form onSubmit={handleUnlockFounders} className="space-y-4">
               <input
                 type="password"
+                maxLength={4}
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
-                placeholder="Introduce PIN (Ej: 777 o paulo)..."
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-center text-white placeholder-gray-500 focus:outline-none focus:border-amber-400"
+                placeholder="••••"
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-center text-white placeholder-gray-500 focus:outline-none focus:border-temple-gold font-mono tracking-[0.5em] text-lg"
+                autoFocus
               />
-              {pinError && <p className="text-xs text-red-400 font-bold">PIN incorrecto. Intenta con '777' o 'paulo'.</p>}
+              {pinError && <p className="text-xs text-red-400 font-bold">PIN incorrecto.</p>}
               <button
                 type="submit"
-                className="w-full py-3 bg-amber-500 text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-amber-400 transition"
+                className="w-full py-3 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-temple-gold-bright transition shadow-lg shadow-temple-gold/20"
               >
                 Desbloquear Bóveda Privada
               </button>
@@ -369,7 +371,7 @@ export default function TempleWikiApp() {
                 <button
                   onClick={handleLLMExtract}
                   disabled={llmExtracting}
-                  className="px-2.5 py-1 bg-gradient-to-r from-amber-500 to-temple-gold text-black text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider rounded-lg flex items-center gap-1 hover:scale-105 transition shadow-sm whitespace-nowrap"
+                  className="px-2.5 py-1 bg-temple-gold hover:bg-temple-gold-bright text-black text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider rounded-lg flex items-center gap-1 hover:scale-105 transition shadow-sm whitespace-nowrap"
                 >
                   <Cpu size={12} />
                   <span>{llmExtracting ? 'Sintetizando...' : 'Extraer con LLM'}</span>
@@ -400,7 +402,7 @@ export default function TempleWikiApp() {
 
               <button
                 onClick={handleCreateNote}
-                className="px-3 py-2 bg-temple-gold text-black font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-xl hover:bg-amber-400 transition flex items-center gap-1 shadow-md whitespace-nowrap"
+                className="px-3 py-2 bg-temple-gold text-black font-extrabold text-[10px] sm:text-xs uppercase tracking-wider rounded-xl hover:bg-temple-gold-bright transition flex items-center gap-1 shadow-md whitespace-nowrap"
               >
                 <Plus size={14} /> <span>+ Nueva Nota</span>
               </button>
