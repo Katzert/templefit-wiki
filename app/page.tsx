@@ -149,13 +149,25 @@ export default function TempleWikiApp() {
   const [llmExtracting, setLlmExtracting] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('templefit_mini_obsidian_notes');
+    const saved = localStorage.getItem('templefit_mini_obsidian_notes_v2') || localStorage.getItem('templefit_mini_obsidian_notes');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) setNotes(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, WikiNote>();
+          DEFAULT_NOTES.forEach(d => map.set(d.id, d));
+          parsed.forEach(p => {
+            if (p && p.id) map.set(p.id, { ...(map.get(p.id) || {}), ...p });
+          });
+          const merged = Array.from(map.values());
+          setNotes(merged);
+          localStorage.setItem('templefit_mini_obsidian_notes_v2', JSON.stringify(merged));
+          return;
+        }
       } catch (e) {}
     }
+    setNotes(DEFAULT_NOTES);
+    localStorage.setItem('templefit_mini_obsidian_notes_v2', JSON.stringify(DEFAULT_NOTES));
   }, []);
 
   const vaultNotes = notes.filter(n => n.vault === activeVault);
