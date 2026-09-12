@@ -183,7 +183,8 @@ export default function TempleWikiApp() {
 
   const handleUnlockFounders = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === '777' || pinInput === 'paulo' || pinInput === 'admin') {
+    const clean = pinInput.trim().toLowerCase();
+    if (['7777', '2026', '1234', '0000', '777', 'paulo', 'admin'].includes(clean)) {
       setIsUnlocked(true);
       setActiveVault('founders');
       setPinError(false);
@@ -355,14 +356,14 @@ export default function TempleWikiApp() {
                 maxLength={4}
                 value={pinInput}
                 onChange={(e) => setPinInput(e.target.value)}
-                placeholder="••••"
-                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-center text-white placeholder-gray-500 focus:outline-none focus:border-temple-gold font-mono tracking-[0.5em] text-lg"
+                placeholder="Introduce PIN (Ej: 7777 o 2026)..."
+                className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-3 text-sm text-center text-white placeholder-gray-500 focus:outline-none focus:border-temple-gold font-mono tracking-[0.3em] text-lg"
                 autoFocus
               />
-              {pinError && <p className="text-xs text-red-400 font-bold">PIN incorrecto.</p>}
+              {pinError && <p className="text-xs text-red-400 font-bold">PIN incorrecto. (Usa PIN de 4 dígitos como 7777 o 2026).</p>}
               <button
                 type="submit"
-                className="w-full py-3 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-temple-gold-bright transition shadow-lg shadow-temple-gold/20"
+                className="w-full py-3 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-widest rounded-xl hover:bg-amber-400 transition shadow-lg shadow-temple-gold/20"
               >
                 Desbloquear Bóveda Privada
               </button>
@@ -441,49 +442,102 @@ export default function TempleWikiApp() {
                 </div>
 
                 {/* Graph Canvas */}
-                <div className="relative w-full h-[320px] sm:h-[500px] bg-black/60 rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-[360px] sm:h-[540px] bg-black/60 rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden">
                   <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:16px_16px]" />
 
+                  {/* Dynamic Connecting Lines */}
                   <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    <line x1="50%" y1="50%" x2="25%" y2="35%" stroke="#C5A059" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
-                    <line x1="50%" y1="50%" x2="75%" y2="35%" stroke="#C5A059" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
-                    <line x1="50%" y1="50%" x2="50%" y2="75%" stroke="#C5A059" strokeWidth="2" strokeDasharray="4 4" opacity="0.6" />
+                    {filteredNotes.slice(1).map((note, idx) => {
+                      const total = filteredNotes.length;
+                      const otherNodes = total - 1;
+                      const innerCount = Math.min(otherNodes, 6);
+                      let targetPos = { x: 50, y: 50 };
+                      if (idx < innerCount) {
+                        const angle = (idx / innerCount) * 2 * Math.PI - Math.PI / 2;
+                        targetPos = {
+                          x: Math.round(50 + 34 * Math.cos(angle)),
+                          y: Math.round(50 + 28 * Math.sin(angle))
+                        };
+                      } else {
+                        const outerIndex = idx - innerCount;
+                        const outerCount = otherNodes - innerCount;
+                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 4;
+                        targetPos = {
+                          x: Math.round(50 + 44 * Math.cos(angle)),
+                          y: Math.round(50 + 40 * Math.sin(angle))
+                        };
+                      }
+
+                      return (
+                        <line 
+                          key={note.id}
+                          x1="50%" 
+                          y1="50%" 
+                          x2={`${targetPos.x}%`} 
+                          y2={`${targetPos.y}%`} 
+                          stroke="#C5A059" 
+                          strokeWidth="1.5" 
+                          strokeDasharray="4 4" 
+                          opacity="0.5" 
+                        />
+                      );
+                    })}
                   </svg>
 
+                  {/* Dynamic Nodes with Guaranteed Separation */}
                   {filteredNotes.map((note, idx) => {
-                    const positions = [
-                      { x: 50, y: 50 },
-                      { x: 25, y: 35 },
-                      { x: 75, y: 35 },
-                      { x: 50, y: 75 },
-                      { x: 30, y: 65 }
-                    ];
-                    const pos = positions[idx % positions.length];
+                    const total = filteredNotes.length;
+                    let pos = { x: 50, y: 50 };
+
+                    if (total > 1 && idx > 0) {
+                      const otherNodes = total - 1;
+                      const innerCount = Math.min(otherNodes, 6);
+                      if (idx <= innerCount) {
+                        const angle = ((idx - 1) / innerCount) * 2 * Math.PI - Math.PI / 2;
+                        pos = {
+                          x: Math.round(50 + 34 * Math.cos(angle)),
+                          y: Math.round(50 + 28 * Math.sin(angle))
+                        };
+                      } else {
+                        const outerIndex = idx - 1 - innerCount;
+                        const outerCount = otherNodes - innerCount;
+                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 4;
+                        pos = {
+                          x: Math.round(50 + 44 * Math.cos(angle)),
+                          y: Math.round(50 + 40 * Math.sin(angle))
+                        };
+                      }
+                    }
+
                     const isActive = note.id === activeNote.id;
 
                     return (
                       <motion.div
                         key={note.id}
-                        whileHover={{ scale: 1.15 }}
+                        whileHover={{ scale: 1.12 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => {
                           setActiveNoteId(note.id);
                           setViewMode('editor');
                         }}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer p-4 rounded-2xl border backdrop-blur-md shadow-2xl flex flex-col items-center gap-2 transition-all ${
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer p-2 sm:p-3 rounded-xl sm:rounded-2xl border backdrop-blur-md shadow-2xl flex flex-col items-center gap-1 sm:gap-1.5 transition-all ${
                           isActive
-                            ? 'bg-temple-gold text-black border-white shadow-temple-gold/40 shadow-xl scale-110 z-20'
-                            : 'bg-[#0B0F19]/90 border-white/20 text-white hover:border-temple-gold'
+                            ? 'bg-temple-gold text-black border-white shadow-temple-gold/40 shadow-xl scale-105 z-20'
+                            : 'bg-[#0B0F19]/95 border-white/20 text-white hover:border-temple-gold'
                         }`}
                       >
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm ${isActive ? 'bg-black text-temple-gold' : 'bg-white/10 text-white'}`}>
+                        <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center font-black text-xs ${isActive ? 'bg-black text-temple-gold' : 'bg-white/10 text-white'}`}>
                           {note.title.charAt(0)}
                         </div>
-                        <span className="text-xs font-extrabold uppercase tracking-wider text-center max-w-[140px] truncate">{note.title}</span>
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-center max-w-[80px] sm:max-w-[120px] truncate">
+                          {note.title}
+                        </span>
                         <div className="flex gap-1">
-                          {note.tags.slice(0, 2).map((t, ti) => (
-                            <span key={ti} className="text-[8px] bg-white/10 px-1.5 py-0.5 rounded font-mono">#{t}</span>
+                          {note.tags.slice(0, 1).map((t, ti) => (
+                            <span key={ti} className="text-[7px] sm:text-[8px] bg-white/10 px-1 py-0.5 rounded font-mono truncate max-w-[60px]">
+                              #{t}
+                            </span>
                           ))}
                         </div>
                       </motion.div>
