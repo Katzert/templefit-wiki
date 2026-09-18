@@ -12,8 +12,8 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  title: 'TempleFit Wiki - Cerebro & Bóveda de Conocimiento Obsidian',
-  description: 'Bóveda descentralizada de conocimiento holístico de TempleFit basada en la especificación Karpathy y Obsidian Graph View.',
+  title: 'TempleFit Wiki - Base de Conocimiento y Guías Operativas',
+  description: 'Base de conocimiento, protocolos de entrenamiento y guías operativas de TempleFit.',
 };
 
 export default function RootLayout({
