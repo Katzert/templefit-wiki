@@ -371,27 +371,75 @@ export default function TempleWikiApp() {
       cleanName = `adjunto_${Date.now()}.${ext}`;
     }
 
-    // Read file as Base64 Data URL to guarantee permanent persistence across sessions and reloads
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64Url = event.target?.result as string;
+    const isImage = file.type.includes('image');
+
+    const saveAttachment = (dataUrl: string) => {
       const newAttachment = {
         name: cleanName,
-        url: base64Url,
-        type: file.type.includes('image') ? 'image' : 'document'
+        url: dataUrl,
+        type: isImage ? 'image' : 'document'
       };
       setNotes(prev => {
         const updated = prev.map(n => n.id === activeNote.id ? {
           ...n,
           attachments: [...(n.attachments || []), newAttachment]
         } : n);
-        localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+        try {
+          localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+        } catch (err) {
+          console.warn('localStorage quota exceeded:', err);
+          alert('Atencion: La memoria de almacenamiento local esta llena. Considera eliminar adjuntos antiguos.');
+          return prev;
+        }
         return updated;
       });
       setShowToast(true);
       setTimeout(() => setShowToast(false), 2500);
     };
-    reader.readAsDataURL(file);
+
+    if (isImage) {
+      const img = new Image();
+      const tempUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(tempUrl);
+        const MAX_DIM = 1280;
+        let width = img.width;
+        let height = img.height;
+        if (width > MAX_DIM || height > MAX_DIM) {
+          if (width > height) {
+            height = Math.round((height * MAX_DIM) / width);
+            width = MAX_DIM;
+          } else {
+            width = Math.round((width * MAX_DIM) / height);
+            height = MAX_DIM;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.78);
+          saveAttachment(compressedDataUrl);
+        } else {
+          const reader = new FileReader();
+          reader.onload = (event) => saveAttachment(event.target?.result as string);
+          reader.readAsDataURL(file);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(tempUrl);
+        const reader = new FileReader();
+        reader.onload = (event) => saveAttachment(event.target?.result as string);
+        reader.readAsDataURL(file);
+      };
+      img.src = tempUrl;
+    } else {
+      const reader = new FileReader();
+      reader.onload = (event) => saveAttachment(event.target?.result as string);
+      reader.readAsDataURL(file);
+    }
     e.target.value = '';
   };
 
@@ -401,7 +449,11 @@ export default function TempleWikiApp() {
         ...n,
         attachments: n.attachments.filter((_, idx) => idx !== attachmentIdx)
       } : n);
-      localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+      try {
+        localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+      } catch (err) {
+        console.warn('localStorage error on delete:', err);
+      }
       return updated;
     });
   };
