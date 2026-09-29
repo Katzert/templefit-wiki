@@ -19,6 +19,27 @@ interface WikiNote {
   updatedAt: string;
 }
 
+// Unicode and Emoji Safe Extraction Helpers (prevents UTF-16 surrogate slicing errors)
+function getNodeEmoji(title: string): string {
+  const clean = (title || '').trim();
+  if (!clean) return '📄';
+  const match = clean.match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)/u);
+  if (match) return match[1];
+  const segmenter = typeof Intl !== 'undefined' && (Intl as any).Segmenter ? new (Intl as any).Segmenter('es', { granularity: 'grapheme' }) : null;
+  if (segmenter) {
+    const firstGrapheme = Array.from(segmenter.segment(clean))[0] as any;
+    if (firstGrapheme?.segment) return firstGrapheme.segment;
+  }
+  const chars = Array.from(clean);
+  return chars[0] || '📄';
+}
+
+function getNodeDisplayTitle(title: string): string {
+  const clean = (title || '').trim();
+  const withoutEmoji = clean.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '').trim();
+  return withoutEmoji || clean;
+}
+
 const DEFAULT_NOTES: WikiNote[] = [
   {
     id: 'note-manual-orden',
@@ -110,7 +131,7 @@ El gimnasio opera con un modelo asociado donde nosotros manejamos 3 Niveles Oper
 - Fase 3: Perfeccionamiento
 - Repartición de gimnasio: 30% del margen neto.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-2',
@@ -124,7 +145,7 @@ El gimnasio opera con un modelo asociado donde nosotros manejamos 3 Niveles Oper
 4. Medicina Preventiva
 Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-3',
@@ -136,7 +157,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Trimestral:** Festivales Corona de Victoria y Vida.
 - **Neuro-Entrenamiento de Impacto en Ventas:** Programa formativo de 630 horas.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-4',
@@ -148,7 +169,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **F2 Recovery:** Recuperación de desertores. 24h Gym, 48h Catering, 72h Med Prev.
 - **F3:** 60% conversión onboarding de Gym a Snack Bar.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-5',
@@ -161,7 +182,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Regla 3-3-3:** Alerta de estancamiento.
 - **NPS:** Corregir operaciones si baja de 7.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-6',
@@ -173,7 +194,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Límite:** 12 atletas por escuadrón para máximo control de comunidad.
 - **Meta Anual:** 300 atletas certificados en el primer año.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   },
   {
     id: 'note-sops-7',
@@ -192,7 +213,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
   - 5% Marketing / Closers
   - 5% Fondo Bonus (Equipo)`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-ES')
+    updatedAt: new Date().toLocaleDateString('es-BO')
   }
 ];
 
@@ -228,6 +249,8 @@ export default function TempleWikiApp() {
 
   const [previewAttachment, setPreviewAttachment] = useState<{ name: string; url: string; type: string } | null>(null);
   const [attachmentErrorModal, setAttachmentErrorModal] = useState<string | null>(null);
+  const [quickViewNote, setQuickViewNote] = useState<WikiNote | null>(null);
+  const graphContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('templefit_mini_obsidian_notes_v3') || localStorage.getItem('templefit_mini_obsidian_notes_v2') || localStorage.getItem('templefit_mini_obsidian_notes');
@@ -552,123 +575,275 @@ export default function TempleWikiApp() {
           {viewMode === 'graph' ? (
             <Card className="bg-[#0B0F19]/95 border-temple-gold/30 min-h-0 sm:min-h-[600px] relative overflow-hidden">
               <CardContent className="!p-4 sm:!p-8">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-white/10">
+                {/* Header bar */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 pb-3 sm:pb-4 border-b border-white/10">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 sm:p-3 bg-temple-gold/10 border border-temple-gold/30 rounded-xl sm:rounded-2xl text-temple-gold">
                       <Network size={20} />
                     </div>
                     <div>
-                      <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold block">Red de Notas Descentralizadas</span>
-                      <h3 className="text-base sm:text-xl font-serif font-black uppercase text-white">Obsidian Graph View ({activeVault === 'business' ? 'Bóveda Negocio' : 'Bóveda Privada'})</h3>
+                      <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold block">
+                        Red de Notas Descentralizadas
+                      </span>
+                      <h3 className="text-base sm:text-xl font-serif font-black uppercase text-white">
+                        Obsidian Graph View ({activeVault === 'business' ? 'Bóveda Negocio' : 'Bóveda Privada'})
+                      </h3>
                     </div>
                   </div>
-                  <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                    {filteredNotes.length} Nodos de Conocimiento
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
+                      {filteredNotes.length} Nodos
+                    </span>
+                    {selectedTag && (
+                      <button
+                        onClick={() => setSelectedTag(null)}
+                        className="text-[10px] text-amber-400 hover:text-white font-bold uppercase tracking-wider bg-temple-gold/10 hover:bg-temple-gold/20 px-2.5 py-1 rounded-full border border-temple-gold/30 transition"
+                      >
+                        Ver Todos
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Graph Tag Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-2 no-scrollbar">
+                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-gray-400 shrink-0 mr-1">
+                    Filtrar Grafo:
                   </span>
+                  <button
+                    onClick={() => setSelectedTag(null)}
+                    className={`text-[9px] font-bold px-2 py-0.5 rounded-lg border transition whitespace-nowrap ${
+                      selectedTag === null
+                        ? 'bg-temple-gold text-black border-temple-gold shadow-sm'
+                        : 'bg-black/40 text-gray-400 border-white/10 hover:text-white'
+                    }`}
+                  >
+                    Todos ({vaultNotes.length})
+                  </button>
+                  {allTags.map((tag) => (
+                    <button
+                      key={tag}
+                      onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                      className={`text-[9px] font-mono px-2 py-0.5 rounded-lg border transition whitespace-nowrap ${
+                        selectedTag === tag
+                          ? 'bg-temple-gold text-black border-temple-gold shadow-sm'
+                          : 'bg-black/40 text-gray-400 border-white/10 hover:text-white'
+                      }`}
+                    >
+                      #{tag}
+                    </button>
+                  ))}
                 </div>
 
                 {/* Graph Canvas */}
-                <div className="relative w-full h-[360px] sm:h-[540px] bg-black/60 rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden">
-                  <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:16px_16px]" />
+                <div 
+                  ref={graphContainerRef}
+                  className="relative w-full h-[400px] sm:h-[540px] bg-[#070A11] rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden touch-none"
+                >
+                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:20px_20px]" />
 
-                  {/* Dynamic Connecting Lines */}
+                  {/* Dynamic Obsidian Relationship Filaments */}
                   <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    {filteredNotes.slice(1).map((note, idx) => {
+                    {(() => {
                       const total = filteredNotes.length;
-                      const otherNodes = total - 1;
-                      const innerCount = Math.min(otherNodes, 6);
-                      let targetPos = { x: 50, y: 50 };
-                      if (idx < innerCount) {
-                        const angle = (idx / innerCount) * 2 * Math.PI - Math.PI / 2;
-                        targetPos = {
-                          x: Math.round(50 + 34 * Math.cos(angle)),
-                          y: Math.round(50 + 28 * Math.sin(angle))
-                        };
-                      } else {
-                        const outerIndex = idx - innerCount;
-                        const outerCount = otherNodes - innerCount;
-                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 4;
-                        targetPos = {
-                          x: Math.round(50 + 44 * Math.cos(angle)),
-                          y: Math.round(50 + 40 * Math.sin(angle))
-                        };
+                      const positions = filteredNotes.map((_, idx) => {
+                        if (total === 1) return { x: 50, y: 50 };
+                        if (idx === 0) return { x: 50, y: 50 };
+                        const otherNodes = total - 1;
+                        const innerCount = Math.min(otherNodes, 5);
+                        if (idx <= innerCount) {
+                          const angle = ((idx - 1) / innerCount) * 2 * Math.PI - Math.PI / 2;
+                          return {
+                            x: Math.round(50 + 26 * Math.cos(angle)),
+                            y: Math.round(50 + 23 * Math.sin(angle))
+                          };
+                        } else {
+                          const outerIndex = idx - 1 - innerCount;
+                          const outerCount = otherNodes - innerCount;
+                          const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 3;
+                          return {
+                            x: Math.round(50 + 41 * Math.cos(angle)),
+                            y: Math.round(50 + 36 * Math.sin(angle))
+                          };
+                        }
+                      });
+
+                      const lines: JSX.Element[] = [];
+
+                      // 1. Hub lines from center node
+                      filteredNotes.slice(1).forEach((note, idx) => {
+                        const targetPos = positions[idx + 1];
+                        const isHighlighted = note.id === activeNote.id || filteredNotes[0].id === activeNote.id;
+                        lines.push(
+                          <line
+                            key={`hub-${note.id}`}
+                            x1="50%"
+                            y1="50%"
+                            x2={`${targetPos.x}%`}
+                            y2={`${targetPos.y}%`}
+                            stroke={isHighlighted ? '#F59E0B' : '#C5A059'}
+                            strokeWidth={isHighlighted ? '2' : '1'}
+                            strokeDasharray={isHighlighted ? undefined : '3 3'}
+                            opacity={isHighlighted ? 0.85 : 0.25}
+                          />
+                        );
+                      });
+
+                      // 2. Cross-connections between notes sharing tags
+                      for (let i = 0; i < filteredNotes.length; i++) {
+                        for (let j = i + 1; j < filteredNotes.length; j++) {
+                          const noteA = filteredNotes[i];
+                          const noteB = filteredNotes[j];
+                          const sharedTag = noteA.tags.some(t => noteB.tags.includes(t));
+                          if (sharedTag && i !== 0 && j !== 0) {
+                            const isHighlighted = noteA.id === activeNote.id || noteB.id === activeNote.id;
+                            lines.push(
+                              <line
+                                key={`edge-${noteA.id}-${noteB.id}`}
+                                x1={`${positions[i].x}%`}
+                                y1={`${positions[i].y}%`}
+                                x2={`${positions[j].x}%`}
+                                y2={`${positions[j].y}%`}
+                                stroke={isHighlighted ? '#F59E0B' : '#C5A059'}
+                                strokeWidth={isHighlighted ? '1.8' : '0.8'}
+                                strokeDasharray={isHighlighted ? undefined : '4 4'}
+                                opacity={isHighlighted ? 0.75 : 0.2}
+                              />
+                            );
+                          }
+                        }
                       }
 
-                      return (
-                        <line 
-                          key={note.id}
-                          x1="50%" 
-                          y1="50%" 
-                          x2={`${targetPos.x}%`} 
-                          y2={`${targetPos.y}%`} 
-                          stroke="#C5A059" 
-                          strokeWidth="1.5" 
-                          strokeDasharray="4 4" 
-                          opacity="0.5" 
-                        />
-                      );
-                    })}
+                      return lines;
+                    })()}
                   </svg>
 
-                  {/* Dynamic Nodes with Guaranteed Separation */}
+                  {/* Dynamic Circular Obsidian Nodes with Drag support */}
                   {filteredNotes.map((note, idx) => {
                     const total = filteredNotes.length;
                     let pos = { x: 50, y: 50 };
 
                     if (total > 1 && idx > 0) {
                       const otherNodes = total - 1;
-                      const innerCount = Math.min(otherNodes, 6);
+                      const innerCount = Math.min(otherNodes, 5);
                       if (idx <= innerCount) {
                         const angle = ((idx - 1) / innerCount) * 2 * Math.PI - Math.PI / 2;
                         pos = {
-                          x: Math.round(50 + 34 * Math.cos(angle)),
-                          y: Math.round(50 + 28 * Math.sin(angle))
+                          x: Math.round(50 + 26 * Math.cos(angle)),
+                          y: Math.round(50 + 23 * Math.sin(angle))
                         };
                       } else {
                         const outerIndex = idx - 1 - innerCount;
                         const outerCount = otherNodes - innerCount;
-                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 4;
+                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 3;
                         pos = {
-                          x: Math.round(50 + 44 * Math.cos(angle)),
-                          y: Math.round(50 + 40 * Math.sin(angle))
+                          x: Math.round(50 + 41 * Math.cos(angle)),
+                          y: Math.round(50 + 36 * Math.sin(angle))
                         };
                       }
                     }
 
                     const isActive = note.id === activeNote.id;
+                    const isRelated = !isActive && note.tags.some(t => activeNote.tags.includes(t));
 
                     return (
                       <motion.div
                         key={note.id}
-                        whileHover={{ scale: 1.12 }}
+                        drag
+                        dragConstraints={graphContainerRef}
+                        dragElastic={0.15}
+                        whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          setActiveNoteId(note.id);
-                          setViewMode('editor');
-                        }}
+                        onClick={() => setActiveNoteId(note.id)}
                         style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer p-2 sm:p-3 rounded-xl sm:rounded-2xl border backdrop-blur-md shadow-2xl flex flex-col items-center gap-1 sm:gap-1.5 transition-all ${
-                          isActive
-                            ? 'bg-temple-gold text-black border-white shadow-temple-gold/40 shadow-xl scale-105 z-20'
-                            : 'bg-[#0B0F19]/95 border-white/20 text-white hover:border-temple-gold'
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center select-none transition-all ${
+                          isActive ? 'z-30' : isRelated ? 'z-20' : 'z-10'
                         }`}
                       >
-                        <div className={`w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex items-center justify-center font-black text-xs ${isActive ? 'bg-black text-temple-gold' : 'bg-white/10 text-white'}`}>
-                          {note.title.charAt(0)}
+                        {/* Circular Obsidian Hub Node */}
+                        <div
+                          className={`relative w-10 h-10 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-lg sm:text-2xl shadow-xl transition-all duration-300 ${
+                            isActive
+                              ? 'bg-gradient-to-br from-amber-300 via-temple-gold to-amber-600 text-black border-2 border-white ring-4 ring-amber-400/40 shadow-amber-500/50 scale-110'
+                              : isRelated
+                              ? 'bg-[#151D2F] text-amber-200 border-2 border-amber-400/60 ring-2 ring-amber-400/20'
+                              : 'bg-[#0B0F19]/90 text-white border border-white/20 hover:border-amber-400/80 hover:bg-[#151D2F]'
+                          }`}
+                        >
+                          <span>{getNodeEmoji(note.title)}</span>
+
+                          {/* Pulsing beacon ring for active note */}
+                          {isActive && (
+                            <span className="absolute -inset-1 rounded-full border border-amber-400/60 animate-ping pointer-events-none" />
+                          )}
                         </div>
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-center max-w-[80px] sm:max-w-[120px] truncate">
-                          {note.title}
-                        </span>
-                        <div className="flex gap-1">
-                          {note.tags.slice(0, 1).map((t, ti) => (
-                            <span key={ti} className="text-[7px] sm:text-[8px] bg-white/10 px-1 py-0.5 rounded font-mono truncate max-w-[60px]">
-                              #{t}
-                            </span>
-                          ))}
+
+                        {/* Compact Obsidian Label Pill */}
+                        <div className="mt-1 flex flex-col items-center pointer-events-none">
+                          <span
+                            className={`text-[9px] sm:text-xs font-bold px-2 py-0.5 rounded-full border truncate max-w-[85px] sm:max-w-[130px] text-center shadow-md transition-all ${
+                              isActive
+                                ? 'bg-temple-gold text-black border-white font-extrabold shadow-amber-500/30'
+                                : isRelated
+                                ? 'bg-black/90 text-amber-300 border-amber-400/40'
+                                : 'bg-black/80 text-gray-300 border-white/10'
+                            }`}
+                          >
+                            {getNodeDisplayTitle(note.title)}
+                          </span>
                         </div>
                       </motion.div>
                     );
                   })}
+                </div>
+
+                {/* Interactive Obsidian Node Inspector Card */}
+                <div className="mt-4 p-4 rounded-2xl bg-black/60 border border-temple-gold/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xl">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-temple-gold/15 border border-temple-gold/40 flex items-center justify-center text-2xl shrink-0 shadow-md">
+                      {getNodeEmoji(activeNote.title)}
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[9px] font-extrabold uppercase tracking-widest text-temple-gold bg-temple-gold/10 px-2 py-0.5 rounded border border-temple-gold/30">
+                          Nota Seleccionada
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-mono">
+                          Actualizado: {activeNote.updatedAt}
+                        </span>
+                      </div>
+                      <h4 className="text-sm sm:text-base font-serif font-black text-white leading-snug">
+                        {activeNote.title}
+                      </h4>
+                      <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                        {activeNote.tags.map((tag, ti) => (
+                          <span key={ti} className="text-[9px] font-mono text-temple-gold bg-temple-gold/10 px-1.5 py-0.5 rounded border border-temple-gold/20">
+                            #{tag}
+                          </span>
+                        ))}
+                        {activeNote.attachments.length > 0 && (
+                          <span className="text-[9px] text-gray-400 bg-white/5 px-1.5 py-0.5 rounded border border-white/10">
+                            📎 {activeNote.attachments.length} adjuntos
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-white/10">
+                    <button
+                      onClick={() => setQuickViewNote(activeNote)}
+                      className="flex-1 sm:flex-none px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 border border-white/10"
+                    >
+                      <Eye size={14} /> <span>Lectura Rápida</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('editor')}
+                      className="flex-1 sm:flex-none px-4 py-2 bg-temple-gold hover:bg-temple-gold-bright text-black font-extrabold text-xs uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-temple-gold/20"
+                    >
+                      <Edit3 size={14} /> <span>Abrir en Editor</span>
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1011,6 +1186,83 @@ export default function TempleWikiApp() {
                 >
                   Entendido
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Lectura Rápida de Nota (Graph View) */}
+      <AnimatePresence>
+        {quickViewNote && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0B0F19] border border-temple-gold/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative"
+            >
+              <div className="flex items-start justify-between border-b border-white/10 pb-3 gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-temple-gold/15 border border-temple-gold/30 flex items-center justify-center text-xl shrink-0">
+                    {getNodeEmoji(quickViewNote.title)}
+                  </div>
+                  <div>
+                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-temple-gold">
+                      Bóveda {quickViewNote.vault === 'business' ? 'Negocio' : 'Privada'} - {quickViewNote.updatedAt}
+                    </span>
+                    <h3 className="text-base sm:text-lg font-serif font-black text-white leading-tight">
+                      {quickViewNote.title}
+                    </h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuickViewNote(null)}
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white shrink-0"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {quickViewNote.tags.map((tag, ti) => (
+                  <span key={ti} className="text-[9px] font-mono text-temple-gold bg-temple-gold/10 px-2 py-0.5 rounded border border-temple-gold/20">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+
+              <div className="max-h-[55vh] overflow-y-auto bg-black/40 rounded-xl p-4 border border-white/5 space-y-4">
+                <div className="prose prose-invert max-w-none text-gray-200 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                  {quickViewNote.content}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                <span className="text-[10px] text-gray-400 font-mono">
+                  {quickViewNote.attachments.length} archivo(s) adjunto(s)
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setQuickViewNote(null)}
+                    className="px-3 py-1.5 text-xs text-gray-400 hover:text-white rounded-lg transition"
+                  >
+                    Cerrar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveNoteId(quickViewNote.id);
+                      setViewMode('editor');
+                      setQuickViewNote(null);
+                    }}
+                    className="px-4 py-2 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-amber-400 transition flex items-center gap-1.5 shadow-md shadow-temple-gold/20"
+                  >
+                    <Edit3 size={14} /> Abrir en Editor
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
