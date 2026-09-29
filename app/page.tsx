@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, Search, Plus, Edit3, Save, Sparkles, FileText, CheckCircle2, 
   Share2, Layers, ExternalLink, Lock, Unlock, Network, Eye, Upload, Tag, 
-  Trash2, ShieldCheck, ArrowRight, Download, Cpu, MessageSquare 
+  Trash2, ShieldCheck, ArrowRight, Download, Cpu, MessageSquare, AlertTriangle, Image as ImageIcon, X 
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 
@@ -20,6 +20,84 @@ interface WikiNote {
 }
 
 const DEFAULT_NOTES: WikiNote[] = [
+  {
+    id: 'note-manual-orden',
+    title: '📋 Manual de cómo se puede trabajar más ordenado?',
+    vault: 'business',
+    tags: ['sops', 'orden', 'organizacion', 'checklist', 'control'],
+    content: `# 📋 Manual de cómo se puede trabajar más ordenado?
+Guía maestra de estandarización, orden operativo y control sistemático para el equipo de TempleFit.
+
+---
+
+### 1. 🌅 RUTINA DE APERTURA (05:45 AM - 06:15 AM)
+El orden de toda la jornada se decide en los primeros 30 minutos antes de que ingrese el primer atleta.
+
+- [ ] **Apertura y Despeje Físico**:
+  - Encender iluminación de la jaula y verificar música/ambiente.
+  - Asegurar cuadrilátero limpio, sin barras ni discos en el suelo.
+  - Preparar estación de hidratación inicial (bidón con sales ElectroHidra).
+- [ ] **Apertura de Caja y Sistema**:
+  - Abrir la aplicación TempleFit Admin en el móvil o tablet.
+  - Verificar fondo de caja física inicial (base de cambio en monedas y billetes).
+  - Comprobar funcionamiento del canal QR Simple para cobros inmediatos.
+
+---
+
+### 2. 👥 GESTIÓN IMPECABLE DE PROSPECTOS Y LEADS
+Regla de oro: Ningún prospecto se queda más de 24 horas sin respuesta humana cálida.
+
+- [ ] **Revisión Matutina del Embudo**:
+  - Filtrar prospectos con estado "Nuevo" y enviar mensaje de bienvenida personalizado por WhatsApp.
+  - Recordar la invitación a la clase de prueba CristoFit Camp del sábado (06:00 AM).
+- [ ] **Día Sábado Comunitario (Regla Anti-Ventas)**:
+  - Respetar el bloqueo estricto de ventas en sábado: el sábado es exclusivamente para comunidad, sudor, técnica y nutrición. No presionar ventas ese día.
+- [ ] **Auditoría de Prospectos (>14 días)**:
+  - Revisar contactos sin respuesta en 14 días. Reclasificar a "Perdido" o activar mensaje de cortesía F2.
+
+---
+
+### 3. 🥤 CONTROL DE SNACK BAR SIN DESCUADRES
+El 90% del desorden financiero surge de consumos no anotados o cobros postergados.
+
+- [ ] **Registro en el Acto**:
+  - Todo consumo de suplemento, barra o batido se anota inmediatamente en la ficha del atleta.
+  - Jamás confiar en la memoria para anotar consumos al final de la jornada.
+- [ ] **Canales de Cobro Claros**:
+  - Ofrecer siempre las dos opciones: **QR Simple** (transferencia bancaria instantánea) o **Efectivo** (en mano).
+  - Para QR Simple, solicitar al atleta que muestre la confirmación en pantalla antes de dar por saldado el monto.
+- [ ] **Saldado de Deudas**:
+  - Cuando un atleta liquide su deuda pendiente o deje saldo a favor, registrar el abono con el método exacto (QR Simple o Efectivo) para que el asiento contable entre a la bóveda correcta (Banco o Caja Física).
+
+---
+
+### 4. 📅 SEGUIMIENTO DE LOS 12 HÁBITOS DIARIOS EN EL CALENDARIO
+No se puede mejorar lo que no se mide día a día.
+
+- [ ] **Verificación en el Calendario Mensual**:
+  - Acceder al Calendario Mensual de Hábitos en TempleFit Admin.
+  - Seleccionar el día actual y marcar cada uno de los 12 hábitos operativos cumplidos.
+  - Meta mínima diaria: 10 de 12 hábitos para calificar el día en color Verde (Óptimo).
+- [ ] **Análisis de Avance Mensual**:
+  - Al final de cada semana y mes, revisar el panel de avance/retroceso para identificar qué hábitos tuvieron menor tasa de cumplimiento y corregir el enfoque.
+
+---
+
+### 5. 🌙 RUTINA DE CIERRE DIARIO (21:30 PM - 22:00 PM)
+Terminar la jornada con la casa en orden garantiza un inicio perfecto al día siguiente.
+
+- [ ] **Cierre y Arqueo de Caja**:
+  - Comparar el dinero en efectivo físico con el total de ingresos en efectivo reportados en el sistema.
+  - Verificar que los pagos por QR Simple coincidan con las notificaciones bancarias.
+- [ ] **Registro de Asistencias y Victorias**:
+  - Validar que todas las asistencias del día quedaron registradas.
+  - Anotar la Victoria Principal del día y el Foco de Ajuste prioritario para mañana.
+- [ ] **Orden Físico y Seguridad**:
+  - Regresar todos los implementos a su posición de almacenamiento estándar.
+  - Cerrar jaula, apagar sistemas y respaldar notas operativas en esta Wiki.`,
+    attachments: [],
+    updatedAt: new Date().toLocaleDateString('es-BO')
+  },
   {
     id: 'note-sops-1',
     title: '📘 1. Modelo Bicéfalo y Espacios',
@@ -148,8 +226,11 @@ export default function TempleWikiApp() {
   const [showToast, setShowToast] = useState(false);
   const [llmExtracting, setLlmExtracting] = useState(false);
 
+  const [previewAttachment, setPreviewAttachment] = useState<{ name: string; url: string; type: string } | null>(null);
+  const [attachmentErrorModal, setAttachmentErrorModal] = useState<string | null>(null);
+
   useEffect(() => {
-    const saved = localStorage.getItem('templefit_mini_obsidian_notes_v2') || localStorage.getItem('templefit_mini_obsidian_notes');
+    const saved = localStorage.getItem('templefit_mini_obsidian_notes_v3') || localStorage.getItem('templefit_mini_obsidian_notes_v2') || localStorage.getItem('templefit_mini_obsidian_notes');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -157,17 +238,30 @@ export default function TempleWikiApp() {
           const map = new Map<string, WikiNote>();
           DEFAULT_NOTES.forEach(d => map.set(d.id, d));
           parsed.forEach(p => {
-            if (p && p.id) map.set(p.id, { ...(map.get(p.id) || {}), ...p });
+            if (p && p.id) {
+              const base = map.get(p.id) || p;
+              // Clean up outdated dates if note has old 21/8/2026 or 'Hoy' date
+              let cleanedDate = p.updatedAt;
+              if (!cleanedDate || cleanedDate === '21/8/2026' || cleanedDate === 'Hoy') {
+                cleanedDate = new Date().toLocaleDateString('es-BO');
+              }
+              map.set(p.id, { ...base, ...p, updatedAt: cleanedDate });
+            }
           });
+          // Ensure note-manual-orden is present
+          if (!map.has('note-manual-orden')) {
+            const manual = DEFAULT_NOTES.find(d => d.id === 'note-manual-orden');
+            if (manual) map.set(manual.id, manual);
+          }
           const merged = Array.from(map.values());
           setNotes(merged);
-          localStorage.setItem('templefit_mini_obsidian_notes_v2', JSON.stringify(merged));
+          localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(merged));
           return;
         }
       } catch (e) {}
     }
     setNotes(DEFAULT_NOTES);
-    localStorage.setItem('templefit_mini_obsidian_notes_v2', JSON.stringify(DEFAULT_NOTES));
+    localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(DEFAULT_NOTES));
   }, []);
 
   const vaultNotes = notes.filter(n => n.vault === activeVault);
@@ -206,16 +300,17 @@ export default function TempleWikiApp() {
   const handleSaveNote = () => {
     // Extract tags from markdown content (#tag)
     const extractedTags = Array.from(editedContent.matchAll(/#(\w+)/g)).map(m => m[1]);
+    const todayDate = new Date().toLocaleDateString('es-BO');
     const updated = notes.map(n => n.id === activeNote.id ? {
       ...n,
       title: editedTitle,
       content: editedContent,
       tags: Array.from(new Set([...extractedTags])),
-      updatedAt: 'Hoy'
+      updatedAt: todayDate
     } : n);
 
     setNotes(updated);
-    localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
+    localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
     setIsEditing(false);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
@@ -225,6 +320,7 @@ export default function TempleWikiApp() {
     const newTitle = prompt('Título de la nueva nota (Mini Obsidian):');
     if (!newTitle || !newTitle.trim()) return;
     const newId = `note-${Date.now()}`;
+    const todayDate = new Date().toLocaleDateString('es-BO');
     const newN: WikiNote = {
       id: newId,
       title: newTitle.trim(),
@@ -232,11 +328,11 @@ export default function TempleWikiApp() {
       tags: [activeVault === 'founders' ? 'paulo_ideas' : 'nota_nueva'],
       content: `# ${newTitle.trim()}\n\nEscribe tu nota descentralizada en formato Markdown...\n\n- Conecta con otras notas usando [[Pilar_Cuerpo]] o [[Pilar_Mente]]\n\n#nota_nueva`,
       attachments: [],
-      updatedAt: 'Hoy'
+      updatedAt: todayDate
     };
-    const updated = [...notes, newN];
+    const updated = [newN, ...notes];
     setNotes(updated);
-    localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
+    localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
     setActiveNoteId(newId);
   };
 
@@ -244,17 +340,47 @@ export default function TempleWikiApp() {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
-    const newAttachment = {
-      name: file.name,
-      url: URL.createObjectURL(file),
-      type: file.type.includes('image') ? 'image' : 'document'
+    
+    // Clean filename if null or empty
+    let cleanName = file.name || '';
+    if (!cleanName || cleanName.startsWith('null')) {
+      const ext = file.type.split('/')[1] || 'png';
+      cleanName = `adjunto_${Date.now()}.${ext}`;
+    }
+
+    // Read file as Base64 Data URL to guarantee permanent persistence across sessions and reloads
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Url = event.target?.result as string;
+      const newAttachment = {
+        name: cleanName,
+        url: base64Url,
+        type: file.type.includes('image') ? 'image' : 'document'
+      };
+      setNotes(prev => {
+        const updated = prev.map(n => n.id === activeNote.id ? {
+          ...n,
+          attachments: [...(n.attachments || []), newAttachment]
+        } : n);
+        localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+        return updated;
+      });
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2500);
     };
-    const updated = notes.map(n => n.id === activeNote.id ? {
-      ...n,
-      attachments: [...n.attachments, newAttachment]
-    } : n);
-    setNotes(updated);
-    localStorage.setItem('templefit_mini_obsidian_notes', JSON.stringify(updated));
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleDeleteAttachment = (attachmentIdx: number) => {
+    setNotes(prev => {
+      const updated = prev.map(n => n.id === activeNote.id ? {
+        ...n,
+        attachments: n.attachments.filter((_, idx) => idx !== attachmentIdx)
+      } : n);
+      localStorage.setItem('templefit_mini_obsidian_notes_v3', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleLLMExtract = () => {
@@ -726,17 +852,67 @@ export default function TempleWikiApp() {
                             <p className="text-xs text-gray-500 italic">No hay archivos ni imágenes adjuntas a esta nota.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {activeNote.attachments.map((att, ai) => (
-                                <div key={ai} className="p-3 rounded-xl bg-black/50 border border-white/10 flex items-center justify-between">
-                                  <div className="flex items-center gap-2 truncate">
-                                    <FileText size={16} className="text-temple-gold shrink-0" />
-                                    <span className="text-xs text-gray-300 truncate">{att.name}</span>
+                              {activeNote.attachments.map((att, ai) => {
+                                const isExpiredBlob = att.url && att.url.startsWith('blob:');
+                                const isImage = att.type === 'image' || (att.url && att.url.startsWith('data:image'));
+
+                                return (
+                                  <div key={ai} className="p-3 rounded-xl bg-black/50 border border-white/10 flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 truncate">
+                                      {isImage ? (
+                                        <ImageIcon size={16} className="text-temple-gold shrink-0" />
+                                      ) : (
+                                        <FileText size={16} className="text-temple-gold shrink-0" />
+                                      )}
+                                      <div className="truncate">
+                                        <p className="text-xs text-gray-300 truncate font-medium">{att.name}</p>
+                                        {isExpiredBlob && (
+                                          <span className="text-[8px] font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1 rounded block w-max mt-0.5">
+                                            Sesión expirada
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 shrink-0">
+                                      {isExpiredBlob ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setAttachmentErrorModal(att.name)}
+                                          className="text-amber-400 hover:text-amber-300 text-xs font-bold px-2 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20"
+                                        >
+                                          Info
+                                        </button>
+                                      ) : isImage ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => setPreviewAttachment(att)}
+                                          className="text-temple-gold hover:text-white text-xs font-bold px-2 py-1 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10"
+                                        >
+                                          Ver
+                                        </button>
+                                      ) : (
+                                        <a 
+                                          href={att.url} 
+                                          download={att.name}
+                                          className="text-temple-gold hover:text-white text-xs font-bold px-2 py-1 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10"
+                                        >
+                                          Descargar
+                                        </a>
+                                      )}
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteAttachment(ai)}
+                                        className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+                                        title="Eliminar archivo adjunto"
+                                      >
+                                        <Trash2 size={14} />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <a href={att.url} target="_blank" rel="noopener noreferrer" className="text-temple-gold hover:text-white text-xs font-bold">
-                                    Abrir
-                                  </a>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           )}
                         </div>
@@ -752,6 +928,94 @@ export default function TempleWikiApp() {
 
         </div>
       )}
+
+      {/* Modal de Previsualización de Imagen Adjunta */}
+      <AnimatePresence>
+        {previewAttachment && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0B0F19] border border-white/10 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl relative"
+            >
+              <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <ImageIcon size={18} className="text-temple-gold" />
+                  <span className="text-sm font-bold text-white truncate">{previewAttachment.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewAttachment(null)}
+                  className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="max-h-[65vh] overflow-auto flex items-center justify-center bg-black/50 rounded-xl p-2">
+                <img
+                  src={previewAttachment.url}
+                  alt={previewAttachment.name}
+                  className="max-h-[60vh] max-w-full rounded object-contain shadow-md"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <a
+                  href={previewAttachment.url}
+                  download={previewAttachment.name}
+                  className="px-4 py-2 bg-temple-gold text-black font-extrabold text-xs uppercase tracking-wider rounded-xl hover:bg-amber-400 transition flex items-center gap-2"
+                >
+                  <Download size={14} /> Descargar Imagen
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de Explicación de Archivo Expirado */}
+      <AnimatePresence>
+        {attachmentErrorModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-[#0B0F19] border border-amber-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
+            >
+              <div className="flex items-center gap-3 text-amber-400 border-b border-white/10 pb-3">
+                <AlertTriangle size={22} className="shrink-0" />
+                <h4 className="text-sm font-black uppercase tracking-wider">Archivo Temporal Expirado</h4>
+              </div>
+
+              <div className="text-xs text-gray-300 space-y-2 leading-relaxed">
+                <p>
+                  El archivo <strong>"{attachmentErrorModal}"</strong> fue subido en una sesión anterior utilizando un enlace temporal del navegador (blob) que ya no reside en la memoria local del dispositivo móvil.
+                </p>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-300 text-[11px]">
+                  <strong>Solución recomendada:</strong>
+                  <ul className="list-disc pl-4 mt-1 space-y-1">
+                    <li>Elimina este archivo dañado presionando el icono de papelera.</li>
+                    <li>Sube el documento o imagen nuevamente. Ahora se guardará de forma permanente y persistente en Base64 para que nunca vuelva a perderse.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setAttachmentErrorModal(null)}
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition"
+                >
+                  Entendido
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
