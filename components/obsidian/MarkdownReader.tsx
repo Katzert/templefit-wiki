@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { FileText, Plus, CheckSquare, Square, AlertCircle, Info, AlertTriangle, Lightbulb } from 'lucide-react';
+import { CheckSquare, Square, Info, AlertTriangle, Lightbulb } from 'lucide-react';
 import { WikiNote } from './types';
 
 interface MarkdownReaderProps {
@@ -25,9 +25,11 @@ export default function MarkdownReader({
     notes.forEach(n => {
       map.set(n.id.toLowerCase(), n);
       map.set(n.title.toLowerCase(), n);
-      // Also match without emoji
       const withoutEmoji = n.title.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '').trim().toLowerCase();
       if (withoutEmoji) map.set(withoutEmoji, n);
+      // Also match without numbers e.g. "Modelo Bicéfalo y Espacios"
+      const withoutNumber = withoutEmoji.replace(/^\d+\.\s*/, '').trim().toLowerCase();
+      if (withoutNumber) map.set(withoutNumber, n);
     });
     return map;
   }, [notes]);
@@ -43,43 +45,43 @@ export default function MarkdownReader({
 
     while ((match = regex.exec(text)) !== null) {
       if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
+        parts.push(renderInlineFormatting(text.slice(lastIndex, match.index)));
       }
 
       const rawLink = match[1].trim();
       const [linkTarget, linkAlias] = rawLink.split('|').map(s => s.trim());
       const normalized = linkTarget.toLowerCase();
-      const targetNote = noteLookup.get(normalized);
+      const targetNote = noteLookup.get(normalized) || 
+        noteLookup.get(normalized.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '').trim()) ||
+        notes.find(n => n.title.toLowerCase().includes(normalized) || normalized.includes(n.title.toLowerCase()));
 
       if (targetNote) {
         parts.push(
-          <button
+          <span
             key={`wiki-${match.index}`}
             onClick={(e) => {
               e.stopPropagation();
               onNavigate(targetNote.id);
             }}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-amber-300 bg-temple-gold/15 hover:bg-temple-gold/30 hover:text-white border border-temple-gold/40 text-xs font-semibold mx-1 transition cursor-pointer"
+            className="text-[#a78bfa] hover:text-[#c4b5fd] hover:underline cursor-pointer font-medium"
             title={`Abrir nota: ${targetNote.title}`}
           >
-            <FileText size={11} className="text-temple-gold shrink-0" />
-            <span>{linkAlias || targetNote.title}</span>
-          </button>
+            {linkAlias || targetNote.title}
+          </span>
         );
       } else {
         parts.push(
-          <button
+          <span
             key={`wiki-create-${match.index}`}
             onClick={(e) => {
               e.stopPropagation();
               onCreateMissingNote(linkTarget);
             }}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-purple-300 bg-purple-500/15 hover:bg-purple-500/30 hover:text-white border border-purple-400/30 text-xs font-semibold mx-1 transition cursor-pointer"
+            className="text-[#a78bfa]/60 hover:text-[#a78bfa] hover:underline cursor-pointer font-medium italic"
             title={`Crear nota: [[${linkTarget}]]`}
           >
-            <Plus size={11} className="text-purple-400 shrink-0" />
-            <span className="italic">{linkAlias || linkTarget} (crear)</span>
-          </button>
+            {linkAlias || linkTarget}
+          </span>
         );
       }
 
@@ -87,14 +89,40 @@ export default function MarkdownReader({
     }
 
     if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
+      parts.push(renderInlineFormatting(text.slice(lastIndex)));
     }
 
     return parts;
   };
 
+  // Helper to parse bold, italic and code
+  const renderInlineFormatting = (text: string): React.ReactNode => {
+    // Basic bold and code parsing
+    const codeSplit = text.split(/(`[^`]+`)/g);
+    return codeSplit.map((chunk, ci) => {
+      if (chunk.startsWith('`') && chunk.endsWith('`') && chunk.length >= 2) {
+        return (
+          <code key={ci} className="bg-[#262626] text-[#e5e5e5] px-1.5 py-0.5 rounded font-mono text-[11px]">
+            {chunk.slice(1, -1)}
+          </code>
+        );
+      }
+      const boldSplit = chunk.split(/(\*\*[^*]+\*\*)/g);
+      return boldSplit.map((bChunk, bi) => {
+        if (bChunk.startsWith('**') && bChunk.endsWith('**') && bChunk.length >= 4) {
+          return (
+            <strong key={`${ci}-${bi}`} className="font-semibold text-[#f1f1f1]">
+              {bChunk.slice(2, -2)}
+            </strong>
+          );
+        }
+        return bChunk;
+      });
+    });
+  };
+
   return (
-    <div className="prose prose-invert max-w-none text-gray-200 text-sm leading-relaxed space-y-3 font-sans select-text">
+    <div className="text-[#dcddde] text-[13px] leading-relaxed space-y-2.5 font-sans select-text">
       {lines.map((line, idx) => {
         const trimmed = line.trim();
 
@@ -103,7 +131,7 @@ export default function MarkdownReader({
           const headingText = trimmed.replace(/^#\s+/, '');
           const id = headingText.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           return (
-            <h1 key={idx} id={id} className="text-xl sm:text-2xl font-serif font-black text-white pt-4 pb-2 border-b border-white/10">
+            <h1 key={idx} id={id} className="text-xl sm:text-2xl font-bold text-[#f5f5f5] pt-4 pb-2 border-b border-[#2d2d2d]">
               {renderTextWithWikilinks(headingText)}
             </h1>
           );
@@ -112,7 +140,7 @@ export default function MarkdownReader({
           const headingText = trimmed.replace(/^##\s+/, '');
           const id = headingText.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           return (
-            <h2 key={idx} id={id} className="text-lg sm:text-xl font-serif font-extrabold text-amber-200 pt-3 pb-1 border-b border-white/5">
+            <h2 key={idx} id={id} className="text-lg font-bold text-[#e5e5e5] pt-3 pb-1 border-b border-[#262626]">
               {renderTextWithWikilinks(headingText)}
             </h2>
           );
@@ -121,7 +149,7 @@ export default function MarkdownReader({
           const headingText = trimmed.replace(/^###\s+/, '');
           const id = headingText.toLowerCase().replace(/[^a-z0-9]+/g, '-');
           return (
-            <h3 key={idx} id={id} className="text-base font-serif font-bold text-temple-gold pt-2">
+            <h3 key={idx} id={id} className="text-sm font-semibold text-[#d4d4d4] pt-2">
               {renderTextWithWikilinks(headingText)}
             </h3>
           );
@@ -135,19 +163,19 @@ export default function MarkdownReader({
             <div
               key={idx}
               onClick={() => onToggleCheckbox?.(idx, !isChecked)}
-              className="flex items-start gap-2.5 py-1 px-2 rounded-lg hover:bg-white/5 cursor-pointer transition group"
+              className="flex items-start gap-2 py-0.5 px-1 rounded hover:bg-[#252525] cursor-pointer transition"
             >
               <button
                 type="button"
-                className="mt-0.5 text-temple-gold group-hover:scale-110 transition shrink-0"
+                className="mt-0.5 text-gray-400 hover:text-gray-200 transition shrink-0"
               >
                 {isChecked ? (
-                  <CheckSquare size={16} className="text-emerald-400 fill-emerald-500/20" />
+                  <CheckSquare size={14} className="text-[#a78bfa]" />
                 ) : (
-                  <Square size={16} className="text-gray-400" />
+                  <Square size={14} className="text-gray-500" />
                 )}
               </button>
-              <span className={`text-xs sm:text-sm leading-snug ${isChecked ? 'line-through text-gray-500' : 'text-gray-200'}`}>
+              <span className={`text-[13px] leading-snug ${isChecked ? 'line-through text-gray-500' : 'text-[#dcddde]'}`}>
                 {renderTextWithWikilinks(taskText)}
               </span>
             </div>
@@ -157,24 +185,24 @@ export default function MarkdownReader({
         // 3. Obsidian Callouts (> [!NOTE], > [!TIP], etc.)
         if (trimmed.startsWith('> [!NOTE]') || trimmed.startsWith('> [!INFO]')) {
           return (
-            <div key={idx} className="my-2 p-3.5 bg-blue-500/10 border-l-4 border-blue-500 rounded-r-xl flex items-start gap-2.5 text-xs text-blue-200">
-              <Info size={16} className="shrink-0 text-blue-400 mt-0.5" />
+            <div key={idx} className="my-2 p-3 bg-[#705dcf]/10 border-l-[3px] border-[#705dcf] rounded-r text-xs text-[#d8d3f7] flex items-start gap-2">
+              <Info size={14} className="shrink-0 text-[#a78bfa] mt-0.5" />
               <div>{renderTextWithWikilinks(trimmed.replace(/^>\s*\[!(NOTE|INFO)\]\s*/, ''))}</div>
             </div>
           );
         }
         if (trimmed.startsWith('> [!TIP]') || trimmed.startsWith('> [!IDEA]')) {
           return (
-            <div key={idx} className="my-2 p-3.5 bg-amber-500/10 border-l-4 border-temple-gold rounded-r-xl flex items-start gap-2.5 text-xs text-amber-200">
-              <Lightbulb size={16} className="shrink-0 text-temple-gold mt-0.5" />
+            <div key={idx} className="my-2 p-3 bg-[#10b981]/10 border-l-[3px] border-[#10b981] rounded-r text-xs text-[#a7f3d0] flex items-start gap-2">
+              <Lightbulb size={14} className="shrink-0 text-[#10b981] mt-0.5" />
               <div>{renderTextWithWikilinks(trimmed.replace(/^>\s*\[!(TIP|IDEA)\]\s*/, ''))}</div>
             </div>
           );
         }
         if (trimmed.startsWith('> [!WARNING]') || trimmed.startsWith('> [!CAUTION]')) {
           return (
-            <div key={idx} className="my-2 p-3.5 bg-red-500/10 border-l-4 border-red-500 rounded-r-xl flex items-start gap-2.5 text-xs text-red-200">
-              <AlertTriangle size={16} className="shrink-0 text-red-400 mt-0.5" />
+            <div key={idx} className="my-2 p-3 bg-[#f59e0b]/10 border-l-[3px] border-[#f59e0b] rounded-r text-xs text-[#fde68a] flex items-start gap-2">
+              <AlertTriangle size={14} className="shrink-0 text-[#f59e0b] mt-0.5" />
               <div>{renderTextWithWikilinks(trimmed.replace(/^>\s*\[!(WARNING|CAUTION)\]\s*/, ''))}</div>
             </div>
           );
@@ -182,26 +210,36 @@ export default function MarkdownReader({
 
         // 4. Horizontal Rule (---)
         if (trimmed === '---') {
-          return <hr key={idx} className="border-white/10 my-4" />;
+          return <hr key={idx} className="border-[#2d2d2d] my-3" />;
         }
 
         // 5. Unordered List Items (- or *)
         if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           return (
-            <li key={idx} className="list-disc ml-5 text-xs sm:text-sm text-gray-300 py-0.5">
+            <li key={idx} className="list-disc ml-5 text-[13px] text-[#cccccc] py-0.5">
               {renderTextWithWikilinks(trimmed.replace(/^[-*]\s+/, ''))}
             </li>
           );
         }
 
-        // 6. Empty line
+        // 6. Numbered List Items (1., 2., etc.)
+        if (/^\d+\.\s/.test(trimmed)) {
+          return (
+            <div key={idx} className="ml-5 text-[13px] text-[#cccccc] py-0.5 flex gap-1.5">
+              <span className="text-gray-400 font-mono text-xs">{trimmed.match(/^\d+\./)?.[0]}</span>
+              <span>{renderTextWithWikilinks(trimmed.replace(/^\d+\.\s*/, ''))}</span>
+            </div>
+          );
+        }
+
+        // 7. Empty line
         if (!trimmed) {
           return <div key={idx} className="h-2" />;
         }
 
-        // 7. Regular paragraph with wikilink parser
+        // 8. Regular paragraph with wikilink parser
         return (
-          <p key={idx} className="text-xs sm:text-sm leading-relaxed text-gray-300">
+          <p key={idx} className="text-[13px] leading-relaxed text-[#dcddde]">
             {renderTextWithWikilinks(line)}
           </p>
         );

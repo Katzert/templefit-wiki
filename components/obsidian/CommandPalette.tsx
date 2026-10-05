@@ -12,9 +12,9 @@ interface CommandPaletteProps {
   onOpenGlobalGraph: () => void;
   onOpenLocalGraph: () => void;
   onCreateNewNote: () => void;
-  onToggleEditMode: () => void;
-  onExportCurrentNote: () => void;
-  onExportVaultBackup: () => void;
+  onToggleEditMode?: () => void;
+  onExportCurrentNote?: () => void;
+  onExportVaultBackup?: () => void;
 }
 
 interface PaletteAction {
@@ -54,54 +54,63 @@ export default function CommandPalette({
   const baseCommands: PaletteAction[] = [
     {
       id: 'cmd-global-graph',
-      title: 'Abrir Grafo Global',
-      subtitle: 'Visualizar red completa de notas y relaciones',
-      icon: <Network size={16} className="text-temple-gold" />,
+      title: 'Open graph view',
+      subtitle: 'Show all notes and relationships',
+      icon: <Network size={14} className="text-[#a78bfa]" />,
       execute: onOpenGlobalGraph
     },
     {
       id: 'cmd-local-graph',
-      title: 'Abrir Grafo Local',
-      subtitle: 'Visualizar conexiones inmediatas de la nota activa',
-      icon: <Compass size={16} className="text-sky-400" />,
+      title: 'Open local graph',
+      subtitle: 'Show neighborhood of active note',
+      icon: <Compass size={14} className="text-[#38bdf8]" />,
       execute: onOpenLocalGraph
     },
     {
       id: 'cmd-new-note',
-      title: 'Crear nueva nota en la Bóveda',
-      subtitle: 'Añadir un nuevo documento Markdown',
-      icon: <Plus size={16} className="text-emerald-400" />,
+      title: 'Create new note',
+      subtitle: 'Add a new markdown note to the vault',
+      icon: <Plus size={14} className="text-[#34d399]" />,
       execute: onCreateNewNote
-    },
-    {
-      id: 'cmd-toggle-edit',
-      title: 'Alternar Modo Lectura / Edición',
-      subtitle: 'Cambiar entre Markdown puro y vista formateada',
-      icon: <Edit3 size={16} className="text-amber-300" />,
-      execute: onToggleEditMode
-    },
-    {
-      id: 'cmd-export-note',
-      title: 'Descargar nota actual como .md',
-      subtitle: 'Exportar archivo Markdown con Frontmatter',
-      icon: <Download size={16} className="text-purple-400" />,
-      execute: onExportCurrentNote
-    },
-    {
-      id: 'cmd-backup-vault',
-      title: 'Exportar Bóveda de Paulo (JSON Backup)',
-      subtitle: 'Copia de seguridad completa de todas las notas y configuraciones',
-      icon: <Layers size={16} className="text-blue-400" />,
-      execute: onExportVaultBackup
     }
   ];
+
+  if (onToggleEditMode) {
+    baseCommands.push({
+      id: 'cmd-toggle-edit',
+      title: 'Toggle reading / editing view',
+      subtitle: 'Switch between rendered markdown and source',
+      icon: <Edit3 size={14} className="text-[#f59e0b]" />,
+      execute: onToggleEditMode
+    });
+  }
+
+  if (onExportCurrentNote) {
+    baseCommands.push({
+      id: 'cmd-export-note',
+      title: 'Export current note to Markdown (.md)',
+      subtitle: 'Download note with YAML frontmatter',
+      icon: <Download size={14} className="text-gray-400" />,
+      execute: onExportCurrentNote
+    });
+  }
+
+  if (onExportVaultBackup) {
+    baseCommands.push({
+      id: 'cmd-backup-vault',
+      title: 'Export vault backup (JSON)',
+      subtitle: 'Full backup of all notes and metadata',
+      icon: <Layers size={14} className="text-gray-400" />,
+      execute: onExportVaultBackup
+    });
+  }
 
   // Note Navigation Items
   const noteItems: PaletteAction[] = notes.map(n => ({
     id: `note-${n.id}`,
     title: n.title,
-    subtitle: `Nota • Tags: #${n.tags.slice(0, 3).join(' #')}`,
-    icon: <FileText size={16} className="text-gray-400" />,
+    subtitle: `Note • #${n.tags.slice(0, 3).join(' #')}`,
+    icon: <FileText size={14} className="text-gray-400" />,
     execute: () => onSelectNote(n.id)
   }));
 
@@ -117,17 +126,17 @@ export default function CommandPalette({
     );
   }, [query, baseCommands, noteItems]);
 
-  // Keyboard navigation (ArrowDown, ArrowUp, Enter, Escape)
+  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev + 1) % Math.max(filteredActions.length, 1));
+        setSelectedIndex(prev => (prev + 1) % Math.max(1, filteredActions.length));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setSelectedIndex(prev => (prev - 1 + filteredActions.length) % Math.max(filteredActions.length, 1));
+        setSelectedIndex(prev => (prev - 1 + filteredActions.length) % Math.max(1, filteredActions.length));
       } else if (e.key === 'Enter') {
         e.preventDefault();
         if (filteredActions[selectedIndex]) {
@@ -147,14 +156,17 @@ export default function CommandPalette({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/80 backdrop-blur-md">
+    <div 
+      className="fixed inset-0 z-50 flex items-start justify-center pt-24 px-4 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div 
-        className="w-full max-w-xl bg-[#0B0F19] border border-temple-gold/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[75vh]"
+        className="w-full max-w-lg bg-[#1e1e1e] border border-[#333333] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[65vh] font-sans"
         onClick={e => e.stopPropagation()}
       >
-        {/* Search input header */}
-        <div className="flex items-center gap-3 p-4 border-b border-white/10 bg-black/40">
-          <Search size={18} className="text-temple-gold shrink-0" />
+        {/* Search Input */}
+        <div className="flex items-center gap-2.5 px-3 py-2.5 border-b border-[#2d2d2d] bg-[#181818]">
+          <Search size={14} className="text-gray-500 shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -163,19 +175,19 @@ export default function CommandPalette({
               setQuery(e.target.value);
               setSelectedIndex(0);
             }}
-            placeholder="Buscar nota o comando (Ctrl+P / Ctrl+O)..."
-            className="w-full bg-transparent text-sm text-white placeholder-gray-500 focus:outline-none font-sans"
+            placeholder="Type a command or note name..."
+            className="w-full bg-transparent text-[13px] text-[#dcddde] placeholder-gray-500 outline-none font-sans"
           />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono text-gray-400 bg-white/5 border border-white/10 rounded">
-            ESC para salir
+          <kbd className="text-[10px] font-mono text-gray-500 bg-[#252525] px-1.5 py-0.5 rounded border border-[#333333]">
+            esc
           </kbd>
         </div>
 
-        {/* Results list */}
-        <div className="overflow-y-auto p-2 space-y-1">
+        {/* Results List */}
+        <div className="overflow-y-auto p-1 space-y-0.5">
           {filteredActions.length === 0 ? (
-            <div className="p-6 text-center text-xs text-gray-500">
-              No se encontraron notas ni comandos para "{query}".
+            <div className="p-4 text-center text-xs text-gray-500">
+              No matching files or commands found for "{query}".
             </div>
           ) : (
             filteredActions.map((action, idx) => {
@@ -188,25 +200,25 @@ export default function CommandPalette({
                     onClose();
                   }}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full text-left p-3 rounded-xl flex items-center justify-between transition ${
-                    isSelected ? 'bg-temple-gold/20 border border-temple-gold/40 text-white' : 'hover:bg-white/5 text-gray-300'
+                  className={`w-full text-left px-2.5 py-2 rounded text-xs flex items-center justify-between transition ${
+                    isSelected ? 'bg-[#2a2a2a] text-white border-l-2 border-[#705dcf]' : 'text-gray-300 hover:bg-[#222222]'
                   }`}
                 >
-                  <div className="flex items-center gap-3 truncate">
-                    <div className="p-1.5 rounded-lg bg-white/5 shrink-0">
+                  <div className="flex items-center gap-2.5 truncate">
+                    <div className="shrink-0">
                       {action.icon}
                     </div>
                     <div className="truncate">
-                      <p className={`text-xs font-bold truncate ${isSelected ? 'text-amber-200' : 'text-white'}`}>
+                      <p className={`text-[12px] font-medium truncate ${isSelected ? 'text-white' : 'text-[#d0d0d0]'}`}>
                         {action.title}
                       </p>
-                      <p className="text-[10px] text-gray-400 truncate">
+                      <p className="text-[10px] text-gray-500 truncate font-mono">
                         {action.subtitle}
                       </p>
                     </div>
                   </div>
                   {isSelected && (
-                    <ArrowRight size={14} className="text-temple-gold shrink-0 ml-2" />
+                    <ArrowRight size={12} className="text-gray-400 shrink-0 ml-2" />
                   )}
                 </button>
               );
@@ -214,14 +226,16 @@ export default function CommandPalette({
           )}
         </div>
 
-        {/* Footer shortcuts info */}
-        <div className="p-2.5 bg-black/60 border-t border-white/10 flex items-center justify-between text-[10px] text-gray-400">
+        {/* Footer */}
+        <div className="px-3 py-1.5 bg-[#141414] border-t border-[#262626] flex items-center justify-between text-[10px] text-gray-500 font-mono">
           <div className="flex items-center gap-2">
-            <span>↑↓ Navegar</span>
+            <span>↑↓ navigate</span>
             <span>•</span>
-            <span>↵ Abrir</span>
+            <span>↵ select</span>
+            <span>•</span>
+            <span>esc close</span>
           </div>
-          <span>Bóveda Paulo • TempleFit</span>
+          <span>TempleFit Vault</span>
         </div>
       </div>
     </div>

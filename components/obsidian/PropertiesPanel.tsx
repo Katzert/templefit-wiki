@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Tag, User, Calendar, ShieldCheck, Plus, X, Layers } from 'lucide-react';
+import { ChevronDown, ChevronRight, Tag, Plus, X, User, Calendar, ShieldCheck } from 'lucide-react';
 import { WikiNote } from './types';
 
 interface PropertiesPanelProps {
@@ -15,6 +15,7 @@ export default function PropertiesPanel({
   onAddTag,
   onRemoveTag
 }: PropertiesPanelProps) {
+  const [isOpen, setIsOpen] = useState(true);
   const [newTagInput, setNewTagInput] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
 
@@ -29,110 +30,99 @@ export default function PropertiesPanel({
   };
 
   return (
-    <div className="bg-black/50 border border-white/10 rounded-2xl p-3.5 space-y-2.5">
-      <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-        <span className="text-[10px] font-extrabold uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
-          <Layers size={12} className="text-temple-gold" /> Propiedades de Obsidian (Frontmatter)
-        </span>
-        <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
-          Sincronizado
-        </span>
-      </div>
+    <div className="mb-4 text-xs font-sans border-b border-[#2d2d2d] pb-3">
+      {/* Collapsible Header */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 text-gray-400 hover:text-gray-200 transition py-1 text-[11px] font-medium tracking-wide"
+      >
+        {isOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+        <span>Properties</span>
+        <span className="text-[10px] text-gray-500 font-mono">({note.tags.length + 3})</span>
+      </button>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-        {/* Author / Vault Owner */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
-          <User size={13} className="text-temple-gold shrink-0" />
-          <div className="truncate">
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Autor / Responsable</span>
-            <span className="text-xs font-bold text-white">Paulo (TempleFit)</span>
+      {isOpen && (
+        <div className="mt-2 space-y-1.5 pl-3 border-l border-[#2d2d2d]/60">
+          {/* Tags Property */}
+          <div className="flex items-center gap-4 py-0.5">
+            <span className="w-20 text-[11px] text-gray-500 flex items-center gap-1.5 shrink-0">
+              <Tag size={11} className="text-gray-400" />
+              <span>tags</span>
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap flex-1">
+              {note.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="bg-[#262626] hover:bg-[#303030] text-[#a78bfa] text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 transition"
+                >
+                  <span>#{tag}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveTag(tag)}
+                    className="text-gray-400 hover:text-red-400 transition"
+                    title={`Quitar #${tag}`}
+                  >
+                    <X size={10} />
+                  </button>
+                </span>
+              ))}
+
+              {isAddingTag ? (
+                <form onSubmit={handleAddTagSubmit} className="inline-flex items-center">
+                  <input
+                    type="text"
+                    value={newTagInput}
+                    onChange={e => setNewTagInput(e.target.value)}
+                    placeholder="etiqueta..."
+                    autoFocus
+                    onBlur={() => {
+                      if (!newTagInput.trim()) setIsAddingTag(false);
+                    }}
+                    className="bg-[#262626] border border-[#a78bfa]/60 text-gray-200 text-[11px] px-2 py-0.5 rounded-full outline-none w-24"
+                  />
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsAddingTag(true)}
+                  className="text-gray-400 hover:text-gray-200 hover:bg-[#262626] p-0.5 rounded transition"
+                  title="Añadir etiqueta"
+                >
+                  <Plus size={12} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Author Property */}
+          <div className="flex items-center gap-4 py-0.5">
+            <span className="w-20 text-[11px] text-gray-500 flex items-center gap-1.5 shrink-0">
+              <User size={11} className="text-gray-400" />
+              <span>author</span>
+            </span>
+            <span className="text-[12px] text-gray-300 font-medium">Paulo</span>
+          </div>
+
+          {/* Status Property */}
+          <div className="flex items-center gap-4 py-0.5">
+            <span className="w-20 text-[11px] text-gray-500 flex items-center gap-1.5 shrink-0">
+              <ShieldCheck size={11} className="text-gray-400" />
+              <span>status</span>
+            </span>
+            <span className="text-[11px] text-[#34d399] bg-[#34d399]/10 px-2 py-0.5 rounded font-mono">activo</span>
+          </div>
+
+          {/* Updated Date Property */}
+          <div className="flex items-center gap-4 py-0.5">
+            <span className="w-20 text-[11px] text-gray-500 flex items-center gap-1.5 shrink-0">
+              <Calendar size={11} className="text-gray-400" />
+              <span>updated</span>
+            </span>
+            <span className="text-[11px] text-gray-400 font-mono">{note.updatedAt || '2026-10-05'}</span>
           </div>
         </div>
-
-        {/* Updated Date */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
-          <Calendar size={13} className="text-sky-400 shrink-0" />
-          <div className="truncate">
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Última Revisión</span>
-            <span className="text-xs font-mono text-gray-200">{note.updatedAt || '05/10/2026'}</span>
-          </div>
-        </div>
-
-        {/* Vault Status */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
-          <ShieldCheck size={13} className="text-emerald-400 shrink-0" />
-          <div className="truncate">
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Estado</span>
-            <span className="text-xs font-bold text-emerald-300">SOP Operativo Activo</span>
-          </div>
-        </div>
-
-        {/* File ID */}
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5">
-          <span className="text-xs font-mono text-amber-400 font-bold">ID</span>
-          <div className="truncate">
-            <span className="text-[9px] text-gray-500 block uppercase font-bold">Identificador</span>
-            <span className="text-[11px] font-mono text-gray-300 truncate block">{note.id}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Tags Row */}
-      <div className="flex items-center gap-1.5 flex-wrap pt-1">
-        <span className="text-[10px] font-bold text-gray-400 flex items-center gap-1 shrink-0 mr-1">
-          <Tag size={11} className="text-temple-gold" /> Etiquetas:
-        </span>
-        {note.tags.map(tag => (
-          <span
-            key={tag}
-            className="text-[10px] font-mono text-amber-300 bg-amber-400/10 border border-amber-400/30 px-2 py-0.5 rounded-lg flex items-center gap-1 group"
-          >
-            <span>#{tag}</span>
-            <button
-              type="button"
-              onClick={() => onRemoveTag(tag)}
-              className="text-gray-400 hover:text-red-400 opacity-60 group-hover:opacity-100 transition"
-              title={`Eliminar #${tag}`}
-            >
-              <X size={10} />
-            </button>
-          </span>
-        ))}
-
-        {isAddingTag ? (
-          <form onSubmit={handleAddTagSubmit} className="inline-flex items-center gap-1">
-            <input
-              type="text"
-              value={newTagInput}
-              onChange={e => setNewTagInput(e.target.value)}
-              placeholder="etiqueta..."
-              autoFocus
-              className="bg-black/60 border border-temple-gold/50 rounded-lg px-2 py-0.5 text-xs text-white placeholder-gray-500 focus:outline-none w-24 font-mono"
-            />
-            <button
-              type="submit"
-              className="p-1 bg-temple-gold text-black rounded-lg text-xs font-bold"
-            >
-              ✓
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsAddingTag(false)}
-              className="p-1 text-gray-400 hover:text-white text-xs"
-            >
-              ✕
-            </button>
-          </form>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsAddingTag(true)}
-            className="text-[10px] text-gray-400 hover:text-temple-gold border border-white/10 hover:border-temple-gold/40 px-2 py-0.5 rounded-lg flex items-center gap-1 transition"
-          >
-            <Plus size={10} /> <span>Añadir</span>
-          </button>
-        )}
-      </div>
+      )}
     </div>
   );
 }
