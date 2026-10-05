@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   BookOpen, Search, Plus, Edit3, Save, Sparkles, FileText, CheckCircle2, 
   Share2, Layers, ExternalLink, Lock, Unlock, Network, Eye, Upload, Tag, 
-  Trash2, ShieldCheck, ArrowRight, Download, Cpu, MessageSquare, AlertTriangle, Image as ImageIcon, X 
+  Trash2, ShieldCheck, ArrowRight, Download, Cpu, MessageSquare, AlertTriangle, Image as ImageIcon, X,
+  RotateCcw
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card';
 
@@ -217,6 +218,38 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
   }
 ];
 
+// Disposición armónica predeterminada para las notas de TempleFit (porcentaje 0-100 en canvas)
+const DEFAULT_NODE_LAYOUT: Record<string, { x: number; y: number }> = {
+  'note-sops-1': { x: 50, y: 46 }, // Hub Focal: Modelo Bicéfalo y Espacios
+  'note-manual-orden': { x: 50, y: 76 }, // Base Operativa: Manual de Orden
+  'note-sops-2': { x: 74, y: 35 }, // Superior Derecho: El Modelo Hub
+  'note-sops-3': { x: 76, y: 65 }, // Inferior Derecho: Ritmos Semanales y Festivales
+  'note-sops-4': { x: 26, y: 65 }, // Inferior Izquierdo: Red de Embudos de Venta
+  'note-sops-5': { x: 24, y: 35 }, // Superior Izquierdo: Bases de Datos y Métricas
+  'note-sops-6': { x: 50, y: 18 }, // Superior Central: Modelo de los 12 Discípulos
+  'note-sops-7': { x: 50, y: 50 }, // Bóveda Privada: Marco Corporativo (50/50)
+};
+
+// Enlaces semánticos de arquitectura operativa TempleFit
+const STRUCTURAL_EDGES: [string, string][] = [
+  ['note-manual-orden', 'note-sops-1'],
+  ['note-manual-orden', 'note-sops-3'],
+  ['note-manual-orden', 'note-sops-5'],
+  ['note-manual-orden', 'note-sops-6'],
+  ['note-sops-1', 'note-sops-2'],
+  ['note-sops-1', 'note-sops-6'],
+  ['note-sops-2', 'note-sops-3'],
+  ['note-sops-2', 'note-sops-4'],
+  ['note-sops-3', 'note-sops-4'],
+  ['note-sops-4', 'note-sops-5'],
+  ['note-sops-5', 'note-sops-6'],
+  ['note-sops-7', 'note-sops-1'],
+  ['note-sops-7', 'note-sops-5'],
+];
+
+// Etiquetas comunes de SOPs que NO deben generar spiderweb densa no deseada
+const GENERIC_TAGS = new Set(['sops', 'control', 'orden', 'organizacion', 'checklist']);
+
 export default function TempleWikiApp() {
   const [isMounted, setIsMounted] = useState(false);
   const [notes, setNotes] = useState<WikiNote[]>(DEFAULT_NOTES);
@@ -251,7 +284,13 @@ export default function TempleWikiApp() {
   const [previewAttachment, setPreviewAttachment] = useState<{ name: string; url: string; type: string } | null>(null);
   const [attachmentErrorModal, setAttachmentErrorModal] = useState<string | null>(null);
   const [quickViewNote, setQuickViewNote] = useState<WikiNote | null>(null);
+
+  // Obsidian Graph View interactive coordinate state & real-time drag tracking
   const graphContainerRef = useRef<HTMLDivElement>(null);
+  const [nodePositions, setNodePositions] = useState<Record<string, { x: number; y: number }>>(DEFAULT_NODE_LAYOUT);
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
+  const dragStartRef = useRef<{ startX: number; startY: number; initX: number; initY: number; hasMoved: boolean } | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -483,6 +522,166 @@ export default function TempleWikiApp() {
   const totalPages = Math.max(1, Math.ceil(filteredNotes.length / NOTES_PER_PAGE));
   const paginatedNotes = filteredNotes.slice((currentPage - 1) * NOTES_PER_PAGE, currentPage * NOTES_PER_PAGE);
 
+  // Auto-inicializar y sincronizar posiciones de nodos en el grafo interactivo
+  useEffect(() => {
+    setNodePositions(prev => {
+      let changed = false;
+      const next = { ...prev };
+      filteredNotes.forEach((note, idx) => {
+        if (!next[note.id]) {
+          changed = true;
+          if (DEFAULT_NODE_LAYOUT[note.id]) {
+            next[note.id] = { ...DEFAULT_NODE_LAYOUT[note.id] };
+          } else {
+            const total = filteredNotes.length;
+            const angle = (idx / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
+            next[note.id] = {
+              x: Math.round(50 + 30 * Math.cos(angle)),
+              y: Math.round(50 + 26 * Math.sin(angle))
+            };
+          }
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [filteredNotes]);
+
+  // Reorganizar el grafo a la disposición armónica por defecto
+  const handleResetGraphLayout = () => {
+    const resetMap: Record<string, { x: number; y: number }> = {};
+    const total = filteredNotes.length;
+    filteredNotes.forEach((note, idx) => {
+      if (DEFAULT_NODE_LAYOUT[note.id]) {
+        resetMap[note.id] = { ...DEFAULT_NODE_LAYOUT[note.id] };
+      } else {
+        const angle = (idx / Math.max(total, 1)) * 2 * Math.PI - Math.PI / 2;
+        resetMap[note.id] = {
+          x: Math.round(50 + 30 * Math.cos(angle)),
+          y: Math.round(50 + 26 * Math.sin(angle))
+        };
+      }
+    });
+    setNodePositions(resetMap);
+  };
+
+  // Cálculo de enlaces (aristas) orgánicos y semánticos al estilo Obsidian
+  const graphEdges = useMemo(() => {
+    const edgeSet = new Set<string>();
+    const edges: { source: string; target: string; isHighlighted: boolean }[] = [];
+
+    const addEdge = (src: string, tgt: string) => {
+      if (!src || !tgt || src === tgt) return;
+      const key = src < tgt ? `${src}---${tgt}` : `${tgt}---${src}`;
+      if (!edgeSet.has(key)) {
+        edgeSet.add(key);
+        const isHighlighted = 
+          activeNote.id === src || activeNote.id === tgt || 
+          hoveredNodeId === src || hoveredNodeId === tgt;
+        edges.push({ source: src, target: tgt, isHighlighted });
+      }
+    };
+
+    const visibleIds = new Set(filteredNotes.map(n => n.id));
+
+    // 1. Enlaces estructurales operativos TempleFit
+    STRUCTURAL_EDGES.forEach(([s, t]) => {
+      if (visibleIds.has(s) && visibleIds.has(t)) {
+        addEdge(s, t);
+      }
+    });
+
+    // 2. Enlaces dinámicos por Wikilinks en Markdown ([[Título]] o [[ID]])
+    filteredNotes.forEach(note => {
+      const wikilinkMatches = note.content.matchAll(/\[\[(.*?)\]\]/g);
+      for (const match of wikilinkMatches) {
+        const query = match[1].trim().toLowerCase();
+        const targetNote = filteredNotes.find(other => 
+          other.id.toLowerCase() === query || 
+          other.title.toLowerCase().includes(query)
+        );
+        if (targetNote && targetNote.id !== note.id && visibleIds.has(targetNote.id)) {
+          addEdge(note.id, targetNote.id);
+        }
+      }
+    });
+
+    // 3. Enlaces por etiquetas temáticas especializadas (excluyendo tags genéricas como #sops)
+    for (let i = 0; i < filteredNotes.length; i++) {
+      for (let j = i + 1; j < filteredNotes.length; j++) {
+        const noteA = filteredNotes[i];
+        const noteB = filteredNotes[j];
+        const sharedDomainTag = noteA.tags.some(
+          t => !GENERIC_TAGS.has(t.toLowerCase()) && noteB.tags.includes(t)
+        );
+        if (sharedDomainTag) {
+          addEdge(noteA.id, noteB.id);
+        }
+      }
+    }
+
+    return edges;
+  }, [filteredNotes, activeNote.id, hoveredNodeId]);
+
+  // Grado de centralidad (número de enlaces por nota)
+  const nodeConnectionCount = useMemo(() => {
+    const counts: Record<string, number> = {};
+    filteredNotes.forEach(n => { counts[n.id] = 0; });
+    graphEdges.forEach(edge => {
+      counts[edge.source] = (counts[edge.source] || 0) + 1;
+      counts[edge.target] = (counts[edge.target] || 0) + 1;
+    });
+    return counts;
+  }, [filteredNotes, graphEdges]);
+
+  // Gestores de arrastre con captura de puntero e hipotenusa de movimiento
+  const handlePointerDown = (e: React.PointerEvent, noteId: string) => {
+    e.stopPropagation();
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch (_) {}
+    const currentPos = nodePositions[noteId] || DEFAULT_NODE_LAYOUT[noteId] || { x: 50, y: 50 };
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initX: currentPos.x,
+      initY: currentPos.y,
+      hasMoved: false
+    };
+    setDraggingNodeId(noteId);
+  };
+
+  const handleContainerPointerMove = (e: React.PointerEvent) => {
+    if (!draggingNodeId || !dragStartRef.current || !graphContainerRef.current) return;
+    const rect = graphContainerRef.current.getBoundingClientRect();
+    const dxPx = e.clientX - dragStartRef.current.startX;
+    const dyPx = e.clientY - dragStartRef.current.startY;
+
+    if (Math.hypot(dxPx, dyPx) > 4) {
+      dragStartRef.current.hasMoved = true;
+    }
+
+    const dxPct = (dxPx / rect.width) * 100;
+    const dyPct = (dyPx / rect.height) * 100;
+
+    const newX = Math.max(6, Math.min(94, Math.round((dragStartRef.current.initX + dxPct) * 10) / 10));
+    const newY = Math.max(8, Math.min(92, Math.round((dragStartRef.current.initY + dyPct) * 10) / 10));
+
+    setNodePositions(prev => ({
+      ...prev,
+      [draggingNodeId]: { x: newX, y: newY }
+    }));
+  };
+
+  const handleContainerPointerUp = () => {
+    if (draggingNodeId && dragStartRef.current) {
+      if (!dragStartRef.current.hasMoved) {
+        setActiveNoteId(draggingNodeId);
+      }
+    }
+    setDraggingNodeId(null);
+    dragStartRef.current = null;
+  };
+
   return (
     <div className="min-h-screen bg-[#05070C] text-white flex flex-col font-sans">
       
@@ -647,8 +846,16 @@ export default function TempleWikiApp() {
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-[10px] sm:text-xs text-gray-400 font-bold uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-full border border-white/10">
-                      {filteredNotes.length} Nodos
+                      {filteredNotes.length} Nodos • {graphEdges.length} Enlaces
                     </span>
+                    <button
+                      onClick={handleResetGraphLayout}
+                      className="text-[10px] sm:text-xs text-gray-300 hover:text-white font-bold uppercase tracking-wider bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded-full border border-white/10 transition flex items-center gap-1.5"
+                      title="Reorganizar grafo a disposición equilibrada"
+                    >
+                      <RotateCcw size={12} />
+                      <span className="hidden sm:inline">Reiniciar</span> Disposición
+                    </button>
                     {selectedTag && (
                       <button
                         onClick={() => setSelectedTag(null)}
@@ -690,139 +897,114 @@ export default function TempleWikiApp() {
                   ))}
                 </div>
 
-                {/* Graph Canvas */}
+                {/* Obsidian Graph Interactive Canvas with Real-Time Synced SVG Filaments */}
                 <div 
                   ref={graphContainerRef}
-                  className="relative w-full h-[400px] sm:h-[540px] bg-[#070A11] rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 flex items-center justify-center overflow-hidden touch-none"
+                  onPointerMove={handleContainerPointerMove}
+                  onPointerUp={handleContainerPointerUp}
+                  onPointerLeave={handleContainerPointerUp}
+                  className="relative w-full h-[440px] sm:h-[580px] bg-[#070A11] rounded-2xl sm:rounded-3xl border border-white/10 p-3 sm:p-6 overflow-hidden touch-none select-none shadow-inner"
                 >
-                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:20px_20px]" />
+                  {/* Subtle Obsidian Dark Mesh Canvas */}
+                  <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#C5A059_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                  {/* Dynamic Obsidian Relationship Filaments */}
-                  <svg className="absolute inset-0 w-full h-full pointer-events-none">
-                    {(() => {
-                      const total = filteredNotes.length;
-                      const positions = filteredNotes.map((_, idx) => {
-                        if (total === 1) return { x: 50, y: 50 };
-                        if (idx === 0) return { x: 50, y: 50 };
-                        const otherNodes = total - 1;
-                        const innerCount = Math.min(otherNodes, 5);
-                        if (idx <= innerCount) {
-                          const angle = ((idx - 1) / innerCount) * 2 * Math.PI - Math.PI / 2;
-                          return {
-                            x: Math.round(50 + 26 * Math.cos(angle)),
-                            y: Math.round(50 + 23 * Math.sin(angle))
-                          };
-                        } else {
-                          const outerIndex = idx - 1 - innerCount;
-                          const outerCount = otherNodes - innerCount;
-                          const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 3;
-                          return {
-                            x: Math.round(50 + 41 * Math.cos(angle)),
-                            y: Math.round(50 + 36 * Math.sin(angle))
-                          };
-                        }
-                      });
+                  {/* Dynamic Obsidian Relationship Filaments - Perfectly Bound to Node Centers */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none select-none">
+                    <defs>
+                      <filter id="obsidian-active-glow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="3.5" result="blur" />
+                        <feMerge>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
 
-                      const lines: JSX.Element[] = [];
+                    {graphEdges.map((edge) => {
+                      const srcPos = nodePositions[edge.source] || DEFAULT_NODE_LAYOUT[edge.source] || { x: 50, y: 50 };
+                      const tgtPos = nodePositions[edge.target] || DEFAULT_NODE_LAYOUT[edge.target] || { x: 50, y: 50 };
+                      const isHighlighted = edge.isHighlighted;
+                      const isFocusActive = Boolean(activeNote.id || hoveredNodeId);
 
-                      // 1. Hub lines from center node
-                      filteredNotes.slice(1).forEach((note, idx) => {
-                        const targetPos = positions[idx + 1];
-                        const isHighlighted = note.id === activeNote.id || filteredNotes[0].id === activeNote.id;
-                        lines.push(
+                      return (
+                        <g key={`edge-${edge.source}-${edge.target}`}>
+                          {/* Glowing underlay for illuminated links */}
+                          {isHighlighted && (
+                            <line
+                              x1={`${srcPos.x}%`}
+                              y1={`${srcPos.y}%`}
+                              x2={`${tgtPos.x}%`}
+                              y2={`${tgtPos.y}%`}
+                              stroke="#F59E0B"
+                              strokeWidth="4"
+                              opacity="0.35"
+                              filter="url(#obsidian-active-glow)"
+                            />
+                          )}
+                          {/* Main relationship filament */}
                           <line
-                            key={`hub-${note.id}`}
-                            x1="50%"
-                            y1="50%"
-                            x2={`${targetPos.x}%`}
-                            y2={`${targetPos.y}%`}
-                            stroke={isHighlighted ? '#F59E0B' : '#C5A059'}
-                            strokeWidth={isHighlighted ? '2' : '1'}
+                            x1={`${srcPos.x}%`}
+                            y1={`${srcPos.y}%`}
+                            x2={`${tgtPos.x}%`}
+                            y2={`${tgtPos.y}%`}
+                            stroke={isHighlighted ? '#F5D061' : '#C5A059'}
+                            strokeWidth={isHighlighted ? '2.2' : '1'}
                             strokeDasharray={isHighlighted ? undefined : '3 3'}
-                            opacity={isHighlighted ? 0.85 : 0.25}
+                            opacity={isHighlighted ? 0.95 : isFocusActive ? 0.12 : 0.3}
+                            className="transition-opacity duration-200"
                           />
-                        );
-                      });
-
-                      // 2. Cross-connections between notes sharing tags
-                      for (let i = 0; i < filteredNotes.length; i++) {
-                        for (let j = i + 1; j < filteredNotes.length; j++) {
-                          const noteA = filteredNotes[i];
-                          const noteB = filteredNotes[j];
-                          const sharedTag = noteA.tags.some(t => noteB.tags.includes(t));
-                          if (sharedTag && i !== 0 && j !== 0) {
-                            const isHighlighted = noteA.id === activeNote.id || noteB.id === activeNote.id;
-                            lines.push(
-                              <line
-                                key={`edge-${noteA.id}-${noteB.id}`}
-                                x1={`${positions[i].x}%`}
-                                y1={`${positions[i].y}%`}
-                                x2={`${positions[j].x}%`}
-                                y2={`${positions[j].y}%`}
-                                stroke={isHighlighted ? '#F59E0B' : '#C5A059'}
-                                strokeWidth={isHighlighted ? '1.8' : '0.8'}
-                                strokeDasharray={isHighlighted ? undefined : '4 4'}
-                                opacity={isHighlighted ? 0.75 : 0.2}
-                              />
-                            );
-                          }
-                        }
-                      }
-
-                      return lines;
-                    })()}
+                        </g>
+                      );
+                    })}
                   </svg>
 
-                  {/* Dynamic Circular Obsidian Nodes with Drag support */}
-                  {filteredNotes.map((note, idx) => {
-                    const total = filteredNotes.length;
-                    let pos = { x: 50, y: 50 };
-
-                    if (total > 1 && idx > 0) {
-                      const otherNodes = total - 1;
-                      const innerCount = Math.min(otherNodes, 5);
-                      if (idx <= innerCount) {
-                        const angle = ((idx - 1) / innerCount) * 2 * Math.PI - Math.PI / 2;
-                        pos = {
-                          x: Math.round(50 + 26 * Math.cos(angle)),
-                          y: Math.round(50 + 23 * Math.sin(angle))
-                        };
-                      } else {
-                        const outerIndex = idx - 1 - innerCount;
-                        const outerCount = otherNodes - innerCount;
-                        const angle = (outerIndex / Math.max(outerCount, 1)) * 2 * Math.PI - Math.PI / 3;
-                        pos = {
-                          x: Math.round(50 + 41 * Math.cos(angle)),
-                          y: Math.round(50 + 36 * Math.sin(angle))
-                        };
-                      }
-                    }
-
+                  {/* Dynamic Obsidian Nodes with 60FPS Drag & Center-Point Sync */}
+                  {filteredNotes.map((note) => {
+                    const pos = nodePositions[note.id] || DEFAULT_NODE_LAYOUT[note.id] || { x: 50, y: 50 };
                     const isActive = note.id === activeNote.id;
-                    const isRelated = !isActive && note.tags.some(t => activeNote.tags.includes(t));
+                    const isHovered = note.id === hoveredNodeId;
+                    const isConnectedToFocus = graphEdges.some(
+                      e => (e.source === note.id && (e.target === activeNote.id || e.target === hoveredNodeId)) ||
+                           (e.target === note.id && (e.source === activeNote.id || e.source === hoveredNodeId))
+                    );
+                    const connections = nodeConnectionCount[note.id] || 0;
+                    const isCentralHub = connections >= 4;
+                    const isFocusActive = Boolean(activeNote.id || hoveredNodeId);
+                    const isDimmed = isFocusActive && !isActive && !isHovered && !isConnectedToFocus;
+                    const isCurrentlyDragging = draggingNodeId === note.id;
 
                     return (
-                      <motion.div
+                      <div
                         key={note.id}
-                        drag
-                        dragConstraints={graphContainerRef}
-                        dragElastic={0.15}
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => setActiveNoteId(note.id)}
-                        style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
-                        className={`absolute -translate-x-1/2 -translate-y-1/2 cursor-pointer flex flex-col items-center select-none transition-all ${
-                          isActive ? 'z-30' : isRelated ? 'z-20' : 'z-10'
-                        }`}
+                        onPointerDown={(e) => handlePointerDown(e, note.id)}
+                        onMouseEnter={() => setHoveredNodeId(note.id)}
+                        onMouseLeave={() => setHoveredNodeId(null)}
+                        onDoubleClick={() => setViewMode('editor')}
+                        style={{ 
+                          left: `${pos.x}%`, 
+                          top: `${pos.y}%`,
+                          touchAction: 'none'
+                        }}
+                        className={`absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center select-none ${
+                          isCurrentlyDragging ? 'cursor-grabbing z-40' : 'cursor-grab hover:z-30'
+                        } ${
+                          isActive ? 'z-30 scale-110' : isHovered ? 'z-30 scale-105' : isConnectedToFocus ? 'z-20' : 'z-10'
+                        } ${isDimmed ? 'opacity-35 hover:opacity-100' : 'opacity-100'} transition-transform duration-150`}
+                        title={`${note.title} (${connections} enlaces) - Arrastra para mover, clic para inspeccionar, doble clic para abrir editor`}
                       >
                         {/* Circular Obsidian Hub Node */}
                         <div
-                          className={`relative w-10 h-10 sm:w-13 sm:h-13 rounded-full flex items-center justify-center text-lg sm:text-2xl shadow-xl transition-all duration-300 ${
+                          className={`relative ${
+                            isCentralHub ? 'w-12 h-12 sm:w-14 sm:h-14 text-xl sm:text-2xl' : 'w-10 h-10 sm:w-12 sm:h-12 text-lg sm:text-xl'
+                          } rounded-full flex items-center justify-center shadow-2xl transition-all duration-300 ${
                             isActive
-                              ? 'bg-gradient-to-br from-amber-300 via-temple-gold to-amber-600 text-black border-2 border-white ring-4 ring-amber-400/40 shadow-amber-500/50 scale-110'
-                              : isRelated
-                              ? 'bg-[#151D2F] text-amber-200 border-2 border-amber-400/60 ring-2 ring-amber-400/20'
-                              : 'bg-[#0B0F19]/90 text-white border border-white/20 hover:border-amber-400/80 hover:bg-[#151D2F]'
+                              ? 'bg-gradient-to-br from-amber-300 via-temple-gold to-amber-600 text-black border-2 border-white ring-4 ring-amber-400/50 shadow-amber-500/50'
+                              : isHovered
+                              ? 'bg-[#151D2F] text-amber-200 border-2 border-amber-400 ring-4 ring-amber-400/30'
+                              : isConnectedToFocus
+                              ? 'bg-[#121826] text-amber-200 border-2 border-amber-400/70 ring-2 ring-amber-400/20'
+                              : 'bg-[#0B0F19]/95 text-white border border-white/20 hover:border-amber-400/80 hover:bg-[#151D2F]'
                           }`}
                         >
                           <span>{getNodeEmoji(note.title)}</span>
@@ -831,25 +1013,47 @@ export default function TempleWikiApp() {
                           {isActive && (
                             <span className="absolute -inset-1 rounded-full border border-amber-400/60 animate-ping pointer-events-none" />
                           )}
+
+                          {/* Degree Connection Badge */}
+                          {connections > 0 && (
+                            <span
+                              className={`absolute -top-1 -right-1 w-4 h-4 rounded-full text-[9px] font-mono font-black flex items-center justify-center border shadow-sm ${
+                                isActive
+                                  ? 'bg-black text-amber-400 border-amber-400'
+                                  : 'bg-temple-gold text-black border-black'
+                              }`}
+                              title={`${connections} conexiones directas`}
+                            >
+                              {connections}
+                            </span>
+                          )}
                         </div>
 
                         {/* Compact Obsidian Label Pill */}
-                        <div className="mt-1 flex flex-col items-center pointer-events-none">
+                        <div className="mt-1.5 flex flex-col items-center pointer-events-none max-w-[120px] sm:max-w-[170px]">
                           <span
-                            className={`text-[9px] sm:text-xs font-bold px-2 py-0.5 rounded-full border truncate max-w-[85px] sm:max-w-[130px] text-center shadow-md transition-all ${
+                            className={`text-[9px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full border truncate text-center shadow-md transition-all ${
                               isActive
                                 ? 'bg-temple-gold text-black border-white font-extrabold shadow-amber-500/30'
-                                : isRelated
+                                : isHovered
+                                ? 'bg-amber-400/20 text-amber-200 border-amber-400/70'
+                                : isConnectedToFocus
                                 ? 'bg-black/90 text-amber-300 border-amber-400/40'
-                                : 'bg-black/80 text-gray-300 border-white/10'
+                                : 'bg-black/85 text-gray-300 border-white/10'
                             }`}
                           >
                             {getNodeDisplayTitle(note.title)}
                           </span>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
+
+                  {/* Obsidian Canvas Hint Bar */}
+                  <div className="absolute bottom-3 left-3 hidden sm:flex items-center gap-2 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 pointer-events-none text-[10px] text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-temple-gold animate-pulse" />
+                    <span>Arrastra los nodos para reorganizar • Clic para seleccionar • Doble clic para abrir editor</span>
+                  </div>
                 </div>
 
                 {/* Interactive Obsidian Node Inspector Card */}
