@@ -117,7 +117,7 @@ Terminar la jornada con la casa en orden garantiza un inicio perfecto al día si
   - Regresar todos los implementos a su posición de almacenamiento estándar.
   - Cerrar jaula, apagar sistemas y respaldar notas operativas en esta Wiki.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-1',
@@ -131,7 +131,7 @@ El gimnasio opera con un modelo asociado donde nosotros manejamos 3 Niveles Oper
 - Fase 3: Perfeccionamiento
 - Repartición de gimnasio: 30% del margen neto.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-2',
@@ -145,7 +145,7 @@ El gimnasio opera con un modelo asociado donde nosotros manejamos 3 Niveles Oper
 4. Medicina Preventiva
 Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-3',
@@ -157,7 +157,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Trimestral:** Festivales Corona de Victoria y Vida.
 - **Neuro-Entrenamiento de Impacto en Ventas:** Programa formativo de 630 horas.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-4',
@@ -169,7 +169,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **F2 Recovery:** Recuperación de desertores. 24h Gym, 48h Catering, 72h Med Prev.
 - **F3:** 60% conversión onboarding de Gym a Snack Bar.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-5',
@@ -182,7 +182,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Regla 3-3-3:** Alerta de estancamiento.
 - **NPS:** Corregir operaciones si baja de 7.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-6',
@@ -194,7 +194,7 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
 - **Límite:** 12 atletas por escuadrón para máximo control de comunidad.
 - **Meta Anual:** 300 atletas certificados en el primer año.`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   },
   {
     id: 'note-sops-7',
@@ -213,11 +213,12 @@ Todo alumno debe transicionar por estas unidades (Cross-Selling natural).`,
   - 5% Marketing / Closers
   - 5% Fondo Bonus (Equipo)`,
     attachments: [],
-    updatedAt: new Date().toLocaleDateString('es-BO')
+    updatedAt: '05/10/2026'
   }
 ];
 
 export default function TempleWikiApp() {
+  const [isMounted, setIsMounted] = useState(false);
   const [notes, setNotes] = useState<WikiNote[]>(DEFAULT_NOTES);
   const [activeVault, setActiveVault] = useState<'business' | 'founders'>('business');
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -253,6 +254,7 @@ export default function TempleWikiApp() {
   const graphContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    setIsMounted(true);
     const saved = localStorage.getItem('templefit_mini_obsidian_notes_v3') || localStorage.getItem('templefit_mini_obsidian_notes_v2') || localStorage.getItem('templefit_mini_obsidian_notes');
     if (saved) {
       try {
@@ -536,8 +538,9 @@ export default function TempleWikiApp() {
         </div>
       </header>
 
-      {/* Main Content Area */}
-      {activeVault === 'founders' && !isUnlocked ? (
+      {/* Main Landmark Area */}
+      <main className="flex-1 flex flex-col">
+        {activeVault === 'founders' && !isUnlocked ? (
         /* LOCK SCREEN FOR PRIVATE FOUNDERS VAULT */
         <div className="flex-1 flex items-center justify-center p-4">
           <Card className="max-w-md w-full bg-[#0B0F19] border-temple-gold/30 p-8 text-center space-y-6 shadow-2xl">
@@ -637,9 +640,9 @@ export default function TempleWikiApp() {
                       <span className="text-[9px] font-extrabold uppercase tracking-[0.25em] text-temple-gold block">
                         Red de Notas Descentralizadas
                       </span>
-                      <h3 className="text-base sm:text-xl font-serif font-black uppercase text-white">
+                      <h2 className="text-base sm:text-xl font-serif font-black uppercase text-white">
                         Obsidian Graph View ({activeVault === 'business' ? 'Bóveda Negocio' : 'Bóveda Privada'})
-                      </h3>
+                      </h2>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -864,9 +867,9 @@ export default function TempleWikiApp() {
                           Actualizado: {activeNote.updatedAt}
                         </span>
                       </div>
-                      <h4 className="text-sm sm:text-base font-serif font-black text-white leading-snug">
+                      <h3 className="text-sm sm:text-base font-serif font-black text-white leading-snug">
                         {activeNote.title}
-                      </h4>
+                      </h3>
                       <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                         {activeNote.tags.map((tag, ti) => (
                           <span key={ti} className="text-[9px] font-mono text-temple-gold bg-temple-gold/10 px-1.5 py-0.5 rounded border border-temple-gold/20">
@@ -905,6 +908,7 @@ export default function TempleWikiApp() {
               
               {/* Left Column: Notes List & Tag Filters */}
               <div className="lg:col-span-4 space-y-4">
+                <h2 className="sr-only">Explorador de Notas y SOPs</h2>
                 <Card className="bg-[#0B0F19]/90 border-white/10">
                   <CardContent className="!p-4 space-y-4">
                     
@@ -964,11 +968,13 @@ export default function TempleWikiApp() {
                           >
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-bold text-white truncate">{n.title}</span>
-                              <span className="text-[9px] text-gray-500">{n.updatedAt}</span>
+                              <span suppressHydrationWarning className="text-[9px] text-gray-300 font-medium">
+                                {isMounted ? n.updatedAt : '05/10/2026'}
+                              </span>
                             </div>
                             <div className="flex items-center gap-1 flex-wrap">
                               {n.tags.map((t, ti) => (
-                                <span key={ti} className="text-[8px] font-mono text-temple-gold bg-temple-gold/10 px-1.5 py-0.5 rounded">
+                                <span key={ti} className="text-[8px] font-mono text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 font-semibold">
                                   #{t}
                                 </span>
                               ))}
@@ -988,11 +994,13 @@ export default function TempleWikiApp() {
                           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                             <button
                               key={p}
+                              type="button"
+                              aria-label={`Ir a la página ${p}`}
                               onClick={() => setCurrentPage(p)}
                               className={`w-7 h-7 rounded-lg text-xs font-extrabold transition ${
                                 currentPage === p
                                   ? 'bg-temple-gold text-black shadow-sm'
-                                  : 'bg-black/40 text-gray-400 hover:bg-white/10 hover:text-white border border-white/10'
+                                  : 'bg-black/40 text-gray-300 hover:bg-white/10 hover:text-white border border-white/10'
                               }`}
                             >
                               {p}
@@ -1017,7 +1025,7 @@ export default function TempleWikiApp() {
                         <span className="text-[10px] uppercase font-extrabold tracking-widest text-temple-gold">
                           Bóveda: {activeNote.vault === 'business' ? 'Negocio' : 'Privada Fundadores'}
                         </span>
-                        <h3 className="text-2xl font-serif font-bold text-white mt-1">{activeNote.title}</h3>
+                        <h2 className="text-2xl font-serif font-bold text-white mt-1">{activeNote.title}</h2>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -1076,7 +1084,7 @@ export default function TempleWikiApp() {
                           </div>
 
                           {activeNote.attachments.length === 0 ? (
-                            <p className="text-xs text-gray-500 italic">No hay archivos ni imágenes adjuntas a esta nota.</p>
+                            <p className="text-xs text-gray-400 italic">No hay archivos ni imágenes adjuntas a esta nota.</p>
                           ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {activeNote.attachments.map((att, ai) => {
@@ -1133,6 +1141,7 @@ export default function TempleWikiApp() {
                                         onClick={() => handleDeleteAttachment(ai)}
                                         className="p-1.5 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
                                         title="Eliminar archivo adjunto"
+                                        aria-label="Eliminar archivo adjunto"
                                       >
                                         <Trash2 size={14} />
                                       </button>
@@ -1155,6 +1164,7 @@ export default function TempleWikiApp() {
 
         </div>
       )}
+      </main>
 
       {/* Modal de Previsualización de Imagen Adjunta */}
       <AnimatePresence>
@@ -1173,6 +1183,7 @@ export default function TempleWikiApp() {
                 </div>
                 <button
                   type="button"
+                  aria-label="Cerrar vista previa de imagen"
                   onClick={() => setPreviewAttachment(null)}
                   className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white"
                 >
@@ -1214,7 +1225,7 @@ export default function TempleWikiApp() {
             >
               <div className="flex items-center gap-3 text-amber-400 border-b border-white/10 pb-3">
                 <AlertTriangle size={22} className="shrink-0" />
-                <h4 className="text-sm font-black uppercase tracking-wider">Archivo Temporal Expirado</h4>
+                <h3 className="text-sm font-black uppercase tracking-wider">Archivo Temporal Expirado</h3>
               </div>
 
               <div className="text-xs text-gray-300 space-y-2 leading-relaxed">
@@ -1270,6 +1281,7 @@ export default function TempleWikiApp() {
                 </div>
                 <button
                   type="button"
+                  aria-label="Cerrar lectura rápida"
                   onClick={() => setQuickViewNote(null)}
                   className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white shrink-0"
                 >

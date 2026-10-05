@@ -14,6 +14,14 @@ const playfair = Playfair_Display({
 export const metadata = {
   title: 'TempleFit Wiki - Base de Conocimiento y Guías Operativas',
   description: 'Base de conocimiento, protocolos de entrenamiento y guías operativas de TempleFit.',
+  icons: {
+    icon: [
+      { url: '/templefit-wiki/icon.svg', type: 'image/svg+xml' },
+      { url: '/templefit-wiki/favicon.ico', sizes: 'any' }
+    ],
+    shortcut: '/templefit-wiki/icon.svg',
+    apple: '/templefit-wiki/icon.svg'
+  }
 };
 
 export default function RootLayout({
